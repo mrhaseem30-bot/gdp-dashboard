@@ -1,0 +1,11 @@
+H32-Quantum-Terminal-V5/
+├── main.py
+├── ai_analyst.py
+├── smc_engine.py
+├── macro_sentinel.py
+├── data_fetcher.py
+├── tts_urdu.py
+├── style.css
+├── .env
+├── requirements.txt
+└── .streamlit/config.toml
