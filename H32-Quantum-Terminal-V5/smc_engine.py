@@ -4,10 +4,12 @@ def prepare_data(df):
     df = df.copy()
     if len(df) < 30:
         return df
+    
     df['ema9'] = df['close'].ewm(span=9).mean()
     df['ema21'] = df['close'].ewm(span=21).mean()
     df['ema50'] = df['close'].ewm(span=50).mean()
     df['ma20'] = df['close'].rolling(20).mean()
+    
     # RSI
     delta = df['close'].diff()
     gain = delta.clip(lower=0).rolling(14).mean()
@@ -35,13 +37,12 @@ def get_quantum_decision(df, symbol):
     
     if price < support * 1.006:
         score += 28
-        reasons.append("Strong Support Zone - Accumulation Possible")
+        reasons.append("Strong Support - Possible Accumulation")
         decision = "STRONG BUY"
         urgency = "High"
     
     if 'rsi' in df.columns:
-        rsi = df['rsi'].iloc[-1]
-        if rsi < 35:
+        if df['rsi'].iloc[-1] < 35:
             reasons.append("RSI Oversold - Bounce Expected")
     
     if price < df['ema21'].iloc[-1]:
@@ -49,8 +50,16 @@ def get_quantum_decision(df, symbol):
         reasons.append("Bearish Pressure")
         decision = "CAUTION / SELL"
     
-    early_alert = f"Next 1-3 hours mein {decision} signal strong hai."
+    early_alert = f"Next 1-3 hours mein {decision} ka strong signal hai."
     
     return {
         "coin": symbol,
         "decision": decision,
+        "score": min(score, 100),
+        "price": round(price, 2),
+        "support": round(support, 2),
+        "resistance": round(resistance, 2),
+        "early_alert": early_alert,
+        "reasons": reasons,
+        "urgency": urgency
+    }
