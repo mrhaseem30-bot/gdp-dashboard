@@ -1,9 +1,0 @@
-streamlit
-ccxt
-pandas
-pandas_ta
-plotly
-groq
-python-dotenv
-gTTS
-requests
