@@ -13,22 +13,21 @@ st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e); color: #00ff9d; }
     .big-signal { padding: 25px; border-radius: 20px; text-align: center; font-size: 2.3rem; font-weight: bold; margin: 10px 0; }
-    .alert { padding: 15px; border-radius: 12px; background: rgba(0, 255, 150, 0.15); border: 1px solid #00ff9d; }
+    .alert-box { padding: 15px; border-radius: 12px; background: rgba(0, 255, 150, 0.15); border: 1px solid #00ff9d; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🛰️ H32 QUANTUM INTELLIGENCE V8.0")
-st.caption("Self-Improving AI Trader • Multi Coin Scanner • Early Alerts")
+st.caption("Multi Coin Scanner • Early Warning • Self Improving")
 
-# Watchlist
 with st.sidebar:
     st.header("📍 Watchlist")
     coins = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT",
              "ADA/USDT", "AVAX/USDT", "SUI/USDT", "DOGE/USDT", "LINK/USDT",
              "DOT/USDT", "UNI/USDT", "LTC/USDT", "ONDO/USDT", "ZEC/USDT"]
     
-    symbol = st.selectbox("Single Coin", coins)
-    tf = st.selectbox("Timeframe", ["15m", "1h", "4h"])
+    symbol = st.selectbox("Single Coin Select", coins)
+    tf = st.selectbox("Timeframe", ["15m", "1h", "4h", "1d"])
 
     st.markdown("---")
     if st.button("🔍 SCAN ALL WATCHLIST", type="primary", use_container_width=True):
@@ -59,7 +58,7 @@ def get_data(symbol, timeframe, limit=250):
     return None
 
 def scan_all_coins():
-    with st.spinner("🌐 Scanning All Coins in Satellite Mode..."):
+    with st.spinner("🌐 Scanning All Coins..."):
         results = []
         progress = st.progress(0)
         
@@ -75,16 +74,16 @@ def scan_all_coins():
         if results:
             st.success(f"✅ {len(results)} Coins Analyzed")
             st.subheader("🚀 TOP OPPORTUNITIES")
-            
             top = sorted(results, key=lambda x: x['score'], reverse=True)[:7]
+            
             for sig in top:
                 color = "#00ff9d" if "BUY" in sig['decision'] else "#ff6666"
-                st.markdown(f"<div class='alert'><b>{sig['coin']}</b> → <span style='color:{color}'>{sig['decision']}</span> ({sig['score']}%)</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='alert-box'><b>{sig['coin']}</b> → <span style='color:{color}'>{sig['decision']}</span> ({sig['score']}%)</div>", unsafe_allow_html=True)
                 st.caption(sig['early_alert'])
                 st.write(f"Price: **\( {sig['price']}** | Support: ** \){sig['support']}**")
                 st.divider()
 
-# Single Coin Analysis
+# Single Coin Full Analysis
 if st.button("🚀 SINGLE COIN QUANTUM ANALYSIS", type="primary"):
     with st.spinner("Analyzing..."):
         df = get_data(symbol, tf)
@@ -98,14 +97,14 @@ if st.button("🚀 SINGLE COIN QUANTUM ANALYSIS", type="primary"):
                 st.metric("Current Price", f"${signal['price']:,}")
             with col2:
                 color = "#00ff9d" if "BUY" in signal['decision'] else "#ff4444"
-                st.markdown(f"<div class='big-signal' style='background:{color};color:black;'>{signal['decision']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='big-signal' style='background:{color}; color:black;'>{signal['decision']}</div>", unsafe_allow_html=True)
             
             st.info(f"**Early Alert:** {signal['early_alert']}")
             st.write("**Reasons:**", " • ".join(signal['reasons']))
             
             if st.button("🔊 Voice Mein Suno"):
-                text = f"{symbol} {signal['decision']} hai. {signal['early_alert']}"
+                text = f"{symbol} abhi {signal['decision']} hai. {signal['early_alert']}"
                 filename = speak_urdu(text)
                 st.audio(filename, format="audio/mp3")
 
-st.caption("H32 Quantum V8.0 • Self Improving System")
+st.caption("H32 Quantum V8.0 • Self Improving AI Trader")
