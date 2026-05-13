@@ -14,7 +14,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ H32 QUANTUM TERMINAL V5.1")
-st.caption("Multi-Source • SMC + Time Intelligence")
+st.caption("Multi-Source Data • SMC + Time Intelligence")
 
 with st.sidebar:
     st.header("📍 Watchlist")
@@ -31,17 +31,3 @@ def get_data(symbol, timeframe, limit=250):
         try:
             if source == "coingecko":
                 coin = symbol.lower().replace("/usdt", "")
-                url = f"https://api.coingecko.com/api/v3/coins/{coin}/ohlc?vs_currency=usd&days=1"
-                resp = requests.get(url, timeout=8)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close'])
-                    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-                    df['volume'] = 0
-                    st.success(f"✅ Data from CoinGecko")
-                    return df
-            
-            else:
-                # CCXT Exchanges
-                exchange = getattr(ccxt, source)({'enableRateLimit': True})
-                o
