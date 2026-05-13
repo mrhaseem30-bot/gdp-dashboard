@@ -2,107 +2,125 @@ import streamlit as st
 import pandas as pd
 import requests
 from gtts import gTTS
+from streamlit_autorefresh import st_autorefresh # Iske liye 'pip install streamlit-autorefresh' lazmi hai
 import os
 
-# --- 🔱 ELITE CORE ---
+# --- 🔱 GLOBAL COMMAND CONFIG ---
 CMC_KEY = "04d81f211e234e55a3e281b9ae23256f"
 GROQ_KEY = "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"
 
-st.set_page_config(page_title="H32 NEURAL V30", layout="wide")
+st.set_page_config(page_title="H32 OMNISCIENT V60", layout="wide")
 
-# --- 🔱 DARK-OPS PREMIUM UI ---
+# --- 🔄 AUTO-REFRESH TRIGGER (Har 30 Second mein khud refresh hoga) ---
+# Aap iska time badal sakte hain (1000 = 1 second)
+count = st_autorefresh(interval=30000, limit=None, key="fizzbuzzcounter")
+
+# --- 🔱 WAR-ROOM UI (Full Black Ops) ---
 st.markdown("""
 <style>
     .stApp { background: #000000 !important; color: #ffffff; }
-    .card {
-        background: #0d1117; border: 1px solid #30363d;
-        border-radius: 10px; padding: 20px;
+    .command-center {
+        background: rgba(10, 10, 15, 0.95);
+        border: 2px solid #1e293b; border-radius: 20px;
+        padding: 25px; margin-bottom: 20px;
     }
-    .stButton>button { width: 100%; border-radius: 8px; background: #238636; color: white; }
+    .metric-card {
+        background: #0d1117; border-radius: 10px; padding: 15px;
+        border-left: 5px solid #58a6ff;
+    }
+    .status-pulse {
+        height: 10px; width: 10px; background-color: #00ff9d;
+        border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 10px #00ff9d; animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0% {transform: scale(0.9);} 70% {transform: scale(1.2);} 100% {transform: scale(0.9);} }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔱 H32 QUANTUM: NEURAL V30")
-st.caption("Brain: Autonomous History + Pro Male Voice Engine")
+# --- 🔱 OMNISCIENT INTELLIGENCE ENGINE ---
 
-# --- 🔱 THE BRAIN ENGINE ---
-
-def get_pro_analysis(coin, price, chg):
+def get_heavy_intelligence(market_summary):
     from groq import Groq
     client = Groq(api_key=GROQ_KEY)
     
-    # AI ko mardana lehjay aur history ke liye sakht hidayat
     prompt = f"""
-    Tum aik professional mard trader ho. Mere bhai Haseem ko samjhao.
-    Asset: {coin} Price: ${price} ({chg}%).
+    Role: Senior Global Macro Commander (Male).
+    Current Market State: {market_summary}
     
-    Analysis Steps:
-    1. HISTORY: Purani history dekh kar batao ke ye trap hai ya real?
-    2. GLOBAL: US Fed aur dunya ke halaat kyon market gira/badha rahe hain?
-    3. WHALE MOVE: Baray traders agla jhatka kahan denge?
-    4. VOICE SCRIPT: Roman Urdu (WhatsApp style) mein mardana aur bhari lehjay wali advice.
-    
-    Advice aise do: 'Suno Haseem bhai, market is waqt...' (Be a man, be direct).
+    Instructions:
+    1. Analyze Billion Dollar Liquidity flows across USA, Asia, and Europe.
+    2. Scan Social Media (TikTok/Twitter) panic vs greed levels.
+    3. Check for any Geopolitical Satellite warnings.
+    4. Voice Script (Roman Urdu): Bhari mardana mardon wali awaaz. 
+    Start: 'Haseem bhai, system ne naya flow detect kiya hai...'
+    Explain: Kaun bech raha hai, kaun khareed raha hai, aur agle 2 ghante ka plan kya hai.
     """
     try:
         resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2
+            temperature=0.1
         )
         return resp.choices[0].message.content
-    except: return "Neural link down. Price action scanning manually."
+    except: return "Satellite Link re-routing... Standby."
 
-def generate_male_voice(text):
+def generate_commander_voice(text):
     try:
-        # 'ur' lang aur thoda fast pitch natural male flow deti hai
         tts = gTTS(text=text, lang='ur', slow=False)
-        tts.save("male_advice.mp3")
-        return "male_advice.mp3"
+        tts.save("auto_report.mp3")
+        return "auto_report.mp3"
     except: return None
 
-# --- 🔱 DASHBOARD ---
+# --- 🔱 LIVE AUTONOMOUS DASHBOARD ---
 
-with st.sidebar:
-    st.header("⚙️ System Control")
-    asset = st.selectbox("Choose Coin", ["BTC", "ETH", "SOL", "SUI", "XRP", "BONE"])
-    st.success("Male Neural Engine: ACTIVE")
+st.title("🔱 H32 OMNISCIENT V60: AUTO-COMMAND")
+st.markdown(f"Status: <span class='status-pulse'></span> **LIVE SCANNING ACTIVE** (Scan #{count})", unsafe_allow_html=True)
 
-if st.button("🚀 EXECUTE FULL HISTORY SCAN"):
-    with st.spinner("History aur Global trends scan ho rahe hain..."):
-        url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
-        headers = {'X-CMC_PRO_API_KEY': CMC_KEY}
-        params = {'symbol': asset, 'convert': 'USD'}
+target_coins = ["BTC", "ETH", "SOL", "SUI", "XRP", "BONE"]
+
+# --- DATA FETCHING (Automatic) ---
+url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
+headers = {'X-CMC_PRO_API_KEY': CMC_KEY}
+params = {'symbol': ",".join(target_coins), 'convert': 'USD'}
+
+try:
+    r = requests.get(url, headers=headers, params=params)
+    all_coins = r.json()['data']
+    
+    summary_list = []
+    cols = st.columns(3)
+    
+    for i, sym in enumerate(target_coins):
+        data = all_coins[sym]
+        price = data['quote']['USD']['price']
+        chg = data['quote']['USD']['percent_change_24h']
+        vol_bn = data['quote']['USD']['volume_24h'] / 1e9
         
-        try:
-            r = requests.get(url, headers=headers, params=params)
-            data = r.json()['data'][asset]
-            price = data['quote']['USD']['price']
-            chg = data['quote']['USD']['percent_change_24h']
-            
-            # Get Deep Logic
-            verdict = get_pro_analysis(asset, round(price, 4), chg)
-            
-            # Display
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            col1, col2 = st.columns([1,1])
-            with col1:
-                st.metric(f"💎 {asset}", f"${price:,.4f}", f"{chg:.2f}%")
-            with col2:
-                status = "✅ SMART ENTRY" if chg < 0 else "⚠️ RISK / TRAP"
-                st.subheader(status)
-            
-            st.divider()
-            st.markdown(f"### 🧠 Neural History Analysis\n{verdict}")
-            
-            # Voice Alert (Male Accent)
-            audio_path = generate_male_voice(verdict)
-            if audio_path:
-                st.audio(audio_path)
+        flow = "INFLOW" if chg > 0 else "OUTFLOW"
+        summary_list.append(f"{sym}: ${price:.2f}, Vol: ${vol_bn:.2f}B, Flow: {flow}")
+        
+        with cols[i % 3]:
+            st.markdown(f"<div class='metric-card'>", unsafe_allow_html=True)
+            st.subheader(f"🌐 {sym}")
+            st.metric("Live Index", f"${price:,.4f}", f"{chg:.2f}%")
+            st.write(f"💵 Liquidity: **${vol_bn:.2f}B**")
+            st.markdown(f"**Global Flow:** {flow}")
             st.markdown("</div>", unsafe_allow_html=True)
-                
-        except Exception as e:
-            st.error(f"System Error: {e}")
+
+    # --- AUTOMATIC BRAIN VERDICT ---
+    st.divider()
+    verdict = get_heavy_intelligence("\n".join(summary_list))
+    
+    st.markdown("<div class='command-center'>", unsafe_allow_html=True)
+    st.markdown(f"### 🛰️ Autonomous Intelligence Report\n{verdict}")
+    
+    audio_path = generate_commander_voice(verdict)
+    if audio_path:
+        st.audio(audio_path, autoplay=True) # Autoplay true taake khud awaaz aaye
+    st.markdown("</div>", unsafe_allow_html=True)
+
+except Exception as e:
+    st.error(f"Global Bridge Interrupted: {e}")
 
 st.divider()
-st.caption("🔱 Quantum V30 | Brother-Voice Edition | Only for Haseem Ali")
+st.caption("🔱 V60 Omniscient | Fully Autonomous War-Room | Developed for Haseem Ali")
