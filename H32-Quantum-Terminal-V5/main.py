@@ -1,126 +1,129 @@
 import streamlit as st
 import pandas as pd
 import requests
-import time
 from gtts import gTTS
-from groq import Groq
+import os
 
-# --- 🔱 INSTITUTIONAL ACCESS ---
-GROQ_API_KEY = "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"
-CMC_API_KEY = "04d81f211e234e55a3e281b9ae23256f"
+# --- 🔱 INSTITUTIONAL CORE ---
+[span_0](start_span)CMC_KEY = "04d81f211e234e55a3e281b9ae23256f" #[span_0](end_span)
+[span_1](start_span)GROQ_KEY = "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" #[span_1](end_span)
 
-st.set_page_config(page_title="H32 QUANTUM V12: WHALE CORE", layout="wide")
+st.set_page_config(page_title="H32 QUANTUM V15", layout="wide")
 
-# --- 🔱 THE "WALL STREET" UI ---
+# --- 🔱 BLACK-OPS UI (Deep Obsidian Theme) ---
 st.markdown("""
 <style>
-    .stApp { background: #010409 !important; color: #e6edf3; }
-    .whale-card {
-        background: linear-gradient(145deg, #0d1117, #1c2128);
-        padding: 30px; border-radius: 20px; border: 1px solid #30363d;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        margin-bottom: 25px;
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    
+    .stApp {
+        background: radial-gradient(circle at top, #0d1117 0%, #010409 100%) !important;
+        color: #c9d1d9;
+        font-family: 'JetBrains Mono', monospace;
     }
-    .trap-warning {
-        background: rgba(255, 68, 68, 0.1); padding: 15px;
-        border-radius: 12px; border: 1px solid #ff4444; color: #ff4444;
-        font-weight: bold; text-align: center; margin: 10px 0;
+    .main-terminal {
+        background: rgba(13, 17, 23, 0.8);
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
     }
-    .entry-zone {
-        background: rgba(0, 255, 157, 0.1); padding: 20px;
-        border-radius: 12px; border: 1px solid #00ff9d; color: #00ff9d;
-        font-size: 1.5rem; font-weight: bold; text-align: center;
+    .buy-signal {
+        background: linear-gradient(90deg, #238636, #2ea043);
+        color: white; padding: 15px; border-radius: 8px;
+        text-align: center; font-size: 1.8rem; font-weight: bold;
+        box-shadow: 0 0 15px rgba(46, 160, 67, 0.3);
     }
+    .sell-signal {
+        background: linear-gradient(90deg, #da3633, #f85149);
+        color: white; padding: 15px; border-radius: 8px;
+        text-align: center; font-size: 1.8rem; font-weight: bold;
+        box-shadow: 0 0 15px rgba(248, 81, 73, 0.3);
+    }
+    .metric-value { font-size: 2rem !important; color: #58a6ff !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔱 H32 QUANTUM V12: ELITE WHALE PSYCHOLOGY")
-st.write("Mode: **Institutional Liquidity Sweep (Anti-Retail Trap)**")
+# --- 🔱 QUANT INTELLIGENCE ---
 
-# --- 🔱 QUANT PSYCHOLOGY ENGINE ---
-
-def get_whale_logic(symbol, price, chg):
-    """Bade AI Traders ki psychology based decision logic"""
+def get_pro_verdict(coin, price, chg):
+    from groq import Groq
+    client = Groq(api_key=GROQ_KEY)
+    
+    # Psychology-driven instructions
+    prompt = f"""
+    Elite Quant Trader mindset se {coin} analyze karo at ${price}.
+    1. Trap Alert: Kya whales retail ko fasa rahi hain?
+    2. Precision Entry: Exact buy level with Fibonacci/SMC logic.
+    3. Downside Risk: Market kitne % mazeed gir sakti hai?
+    4. Voice Script: Ek natural Roman Urdu line jo main bol sakun (e.g. 'Bhai abhi wait karo, market trap kar rahi hai').
+    
+    Response short aur high-impact rakho. Roman Urdu (English alphabet) use karo.
+    """
     try:
-        client = Groq(api_key=GROQ_API_KEY)
-        # Roman Urdu instructing for natural sound + strict levels
-        prompt = f"""
-        Act as a 200 IQ Quant Hedge Fund Manager. 
-        Asset: {symbol} at ${price} ({chg}%).
-        
-        Analyze:
-        1. Retail Trap: Kya retail traders ko trap kiya ja raha hai? 
-        2. Liquidity Hunt: Market stop-loss hit karne kitne percent (%) niche jayegi? Exact % drop batao.
-        3. Point of Control (POC): Exact entry price for Whales.
-        4. Invalidation: Kab ye setup fail ho jayega (SL).
-        
-        Output Style: Roman Urdu (English alphabet). Clear, Direct, No Fluff.
-        Use points: TRAP CHECK, DOWNSIDE %, BEST ENTRY, STOP LOSS.
-        """
         resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.1 # Low temp = No mistakes, only data
+            temperature=0.2
         )
         return resp.choices[0].message.content
-    except: return "Network glitch. Market structure remains under Whale accumulation."
+    except: return "System calibration in progress... Market looks volatile."
 
-def natural_voice(text):
-    """High Speed Voice Alert"""
+def generate_natural_voice(text):
     try:
-        # Roman Urdu text ko ur accent mein bolne se natural sound ati hai
+        # Roman Urdu ko 'ur' lang ke saath use karne se natural accent ata hai
         tts = gTTS(text=text, lang='ur', slow=False)
-        tts.save("whale_alert.mp3")
-        return "whale_alert.mp3"
+        tts.save("pro_signal.mp3")
+        return "pro_signal.mp3"
     except: return None
 
-# --- 🔱 TERMINAL DASHBOARD ---
+# --- 🔱 DASHBOARD ---
+
+st.title("🔱 H32 QUANTUM: BLACK-OPS")
+st.caption("Status: Institutional Bridge Active | Level: Elite Psychology")
 
 with st.sidebar:
-    st.header("🐋 Whale DNA Scanner")
-    target_coin = st.selectbox("Symbol", ["BTC", "ETH", "SOL", "SUI", "ONDO", "HYPE", "XRP"])
-    st.markdown("---")
-    st.write("📊 **Smart Money Concept (SMC) Active**")
-    st.write("🛡️ **Anti-Liquidation Filter: ON**")
+    st.header("🎯 Watchlist")
+    coin = st.selectbox("Select Asset", ["BTC", "ETH", "SOL", "SUI", "ONDO", "XRP"])
+    st.info("SMC & Liquidity Finder Enabled")
 
-if st.button("🚀 EXECUTE INSTITUTIONAL SCAN"):
-    with st.spinner("Scanning Order Blocks & Liquidity Voids..."):
+if st.button("🚀 INITIATE QUANTUM SCAN", use_container_width=True):
+    with st.spinner("Analyzing Whale Wallets & Order Blocks..."):
         url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
-        headers = {'X-CMC_PRO_API_KEY': CMC_API_KEY}
-        params = {'symbol': target_coin, 'convert': 'USD'}
+        headers = {'X-CMC_PRO_API_KEY': CMC_KEY}
+        params = {'symbol': coin, 'convert': 'USD'}
         
         try:
             r = requests.get(url, headers=headers, params=params)
-            data = r.json()['data'][target_coin]
+            data = r.json()['data'][coin]
             price = data['quote']['USD']['price']
             chg = data['quote']['USD']['percent_change_24h']
             
-            # --- EXECUTE BRAIN ---
-            analysis = get_whale_logic(target_coin, round(price, 4), chg)
+            # Logic: Buy only if there's a dip or strong recovery
+            decision = "🟢 ACCUMULATE" if chg < -2 or chg > 5 else "🔴 AVOID/WAIT"
+            style = "buy-signal" if decision == "🟢 ACCUMULATE" else "sell-signal"
             
-            # --- UI RENDERING ---
-            st.markdown("<div class='whale-card'>", unsafe_allow_html=True)
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                st.metric(f"💎 {target_coin} Market Price", f"${price:,.4f}", f"{chg:.2f}%")
-            with col2:
-                # Direct Entry Status
-                if chg < -2:
-                    st.markdown("<div class='entry-zone'>🔥 WHALE BUY ZONE: LIQUIDITY GRAB</div>", unsafe_allow_html=True)
-                else:
-                    st.markdown("<div class='trap-warning'>⚠️ CAUTION: WAITING FOR RETAIL SHAKEOUT</div>", unsafe_allow_html=True)
+            # AI Deep Dive
+            verdict = get_pro_verdict(coin, round(price, 2), chg)
             
-            st.markdown(f"<div class='logic-box' style='background:#0d1117; padding:20px; border-radius:12px; border-left:5px solid #58a6ff;'><b>🐋 WHALE PSYCHOLOGY ANALYSIS:</b><br><br>{analysis}</div>", unsafe_allow_html=True)
+            # UI Render
+            st.markdown(f"<div class='main-terminal'>", unsafe_allow_html=True)
+            c1, c2 = st.columns([1, 1])
+            with c1:
+                st.metric(f"{coin} Live", f"${price:,.2f}", f"{chg:.2f}%")
+            with c2:
+                st.markdown(f"<div class='{style}'>{decision}</div>", unsafe_allow_html=True)
+            
+            st.markdown(f"### 🐋 Institutional Psychology\n{verdict}")
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # Voice Alert (Psychology summary)
-            audio_text = f"{target_coin} analysis complete. {analysis[:180]}"
-            v_file = natural_voice(audio_text)
-            if v_file:
-                st.audio(v_file)
+            # Voice Alert
+            voice_text = f"{coin} ka scan complete. {decision}. " + verdict.split('\n')[-1]
+            audio_path = generate_natural_voice(voice_text)
+            if audio_path:
+                st.audio(audio_path)
                 
         except Exception as e:
-            st.error(f"Execution Error: {e}")
+            st.error(f"Bridge Interrupted: {e}")
 
 st.divider()
-st.caption("🔱 Quantum V12: Whale Psychology Core | Developed for Haseem Ali | No-Galti Edition")
+st.caption("V15 Elite | Powered by Dual-Brain Neural Link | Developed for Haseem Ali")
