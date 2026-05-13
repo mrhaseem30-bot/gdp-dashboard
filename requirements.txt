@@ -1,8 +1,13 @@
 streamlit
 ccxt
 pandas
+pandas_ta
 plotly
 groq
+mistralai
+google-generativeai
 python-dotenv
 gTTS
-requests
+playsound
+numpy
+ta
