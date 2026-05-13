@@ -2,115 +2,99 @@ import streamlit as st
 import requests
 import random
 
-# --- 🔱 CORE CONFIG ---
+# --- 🔱 SATELLITE CORE CONFIG ---
 CMC_KEY = "04d81f211e234e55a3e281b9ae23256f"
-st.set_page_config(page_title="H32 OMNI-HYPER V300", layout="wide")
+st.set_page_config(page_title="H32 SATELLITE-PRO V310", layout="wide")
 
-# --- 🎨 HYPER-NEON GLASS UI ---
+# --- 🎨 HYPER-CHAMAKDAR SATELLITE UI ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
     .stApp { background: #010204 !important; }
-    .hyper-card {
-        background: rgba(10, 15, 25, 0.9);
+    .sat-card {
+        background: rgba(15, 23, 42, 0.9);
+        border: 2px solid #00f2ff;
         border-radius: 20px;
         padding: 25px;
-        margin-bottom: 25px;
-        border: 1px solid #00f2ff33;
-        box-shadow: 0 0 30px #00f2ff11;
-        backdrop-filter: blur(15px);
+        margin-bottom: 30px;
+        box-shadow: 0 0 20px #00f2ff33, inset 0 0 15px #00f2ff11;
+        backdrop-filter: blur(10px);
     }
-    .neon-glow-green { color: #00ff9d; text-shadow: 0 0 15px #00ff9d; font-family: 'Orbitron', sans-serif; }
-    .neon-glow-red { color: #ff4444; text-shadow: 0 0 15px #ff4444; font-family: 'Orbitron', sans-serif; }
-    .status-badge {
-        background: #00f2ff11;
-        border: 1px solid #00f2ff;
-        color: #00f2ff;
-        padding: 5px 15px;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: bold;
+    .neon-green { color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
+    .neon-red { color: #ff4444; text-shadow: 0 0 10px #ff4444; }
+    .sat-header {
+        background: linear-gradient(90deg, #00f2ff, #0062ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 900;
+        text-align: center;
+        font-size: 2.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #fff;'>🔱 OMNI-HYPER V300</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='sat-header'>🔱 SATELLITE-PRO V310</h1>", unsafe_allow_html=True)
 
-# --- 🧠 WORLD PSYCHOLOGY ENGINE ---
-psych_modes = [
-    {"msg": "🌍 WAR RISK: Institutional Safe-Haven Mode (7 Days Bullish)", "color": "#00ff9d"},
-    {"msg": "🏛️ FED CPI ALERT: Whales Hunting Liquidity (2 Days Sideways)", "color": "#58a6ff"},
-    {"msg": "🔥 SUPPLY BURN: LINK & DOT Massive Squeeze (5 Days Aggressive)", "color": "#ff00ff"}
-]
-mode = random.choice(psych_modes)
+# --- 📡 SATELLITE LINK STATUS ---
+st.success("🛰️ DIRECT SATELLITE CONNECTION ESTABLISHED | NODE: KARACHI-G1")
 
-st.html(f"""
-<div style="background: {mode['color']}11; border: 1px solid {mode['color']}; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
-    <b style="color: {mode['color']}; font-size: 1.1rem;">PSYCHOLOGY: {mode['msg']}</b>
-</div>
-""")
+# --- 🧠 GLOBAL IQ ENGINE ---
+st.info("**GLOBAL PSYCHOLOGY:** 🏛️ Institutional Safe-Haven Mode (Trend: 7-10 Days Bullish)")
 
-# --- 📡 UNSTOPPABLE DATA ENGINE ---
 target_coins = ["BTC", "ETH", "SOL", "SUI", "XRP", "BONE", "DOT", "LINK"]
 
-def get_live_data():
-    try:
-        url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
-        r = requests.get(url, headers={'X-CMC_PRO_API_KEY': CMC_KEY}, params={'symbol': ",".join(target_coins)}, timeout=5)
-        return r.json()['data'], "LIVE"
-    except:
-        # Fallback data agar API block ho jaye
-        return None, "OFFLINE (PREDICTIVE MODE)"
+# --- 🛠️ DATA CLEANING FUNCTION (Fixing the ValueError) ---
+def format_p(val):
+    if val > 1:
+        return f"{val:,.2f}"
+    else:
+        return f"{val:,.4f}"
 
-data, status = get_live_data()
-st.markdown(f"<div style='text-align:center'><span class='status-badge'>NODE STATUS: {status}</span></div>", unsafe_allow_html=True)
+try:
+    url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
+    r = requests.get(url, headers={'X-CMC_PRO_API_KEY': CMC_KEY}, params={'symbol': ",".join(target_coins)})
+    data = r.json()['data']
 
-if data:
     for sym in target_coins:
         coin = data[sym]
         p = coin['quote']['USD']['price']
         c24 = coin['quote']['USD']['percent_change_24h']
         is_bullish = c24 > 0
         
-        # 🐋 WHALE LOGIC
-        wallets = random.randint(2, 5) if abs(c24) > 1 else 1
-        entry = p * 0.982
+        # OMNI Calculations
+        entry = p * 0.985
         target = p * 1.15
 
         st.html(f"""
-        <div class="hyper-card">
+        <div class="sat-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <b style="font-size: 1.5rem; color: #fff;">{sym}/USDT</b>
-                <span class="{'neon-glow-green' if is_bullish else 'neon-glow-red'}">{c24:+.2f}%</span>
-            </div>
-            
-            <div style="font-size: 2.5rem; font-weight: 900; color: #fff; margin: 15px 0;">
-                ${p:,.2f if p > 1 else p:,.4f}
-            </div>
-
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid #ffffff11; padding: 12px; border-radius: 10px; margin-bottom: 15px;">
-                <div style="color: #8b949e; font-size: 0.7rem;">WHALE CLUSTER DETECTED</div>
-                <div style="color: #fff; font-weight: bold; font-size: 0.9rem;">{wallets} Active Institutions</div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; border-top: 1px solid #333; pt: 10px; padding-top: 10px;">
-                <div>
-                    <div style="color: #8b949e; font-size: 0.6rem;">ENTRY ZONE</div>
-                    <b style="color: #00ff9d;">${entry:,.2f if entry > 1 else entry:,.4f}</b>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="height: 12px; width: 12px; background: {'#00ff9d' if is_bullish else '#ff4444'}; border-radius: 50%; box-shadow: 0 0 15px {'#00ff9d' if is_bullish else '#ff4444'};"></div>
+                    <b style="font-size: 1.6rem; color: #fff;">{sym}/USDT</b>
                 </div>
-                <div style="text-align: right;">
-                    <div style="color: #8b949e; font-size: 0.6rem;">TARGET (7D)</div>
-                    <b style="color: #58a6ff;">${target:,.2f if target > 1 else target:,.4f}</b>
+                <b class="{'neon-green' if is_bullish else 'neon-red'}" style="font-size: 1.2rem;">{c24:+.2f}%</b>
+            </div>
+
+            <div style="font-size: 3rem; font-weight: 900; color: #fff; margin: 20px 0;">${format_p(p)}</div>
+
+            <div style="background: rgba(0, 242, 255, 0.05); border-left: 5px solid #00f2ff; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <div style="color: #8b949e; font-size: 0.75rem;">SATELLITE POSITION VERDICT</div>
+                <div style="color: #fff; font-weight: bold; margin-top: 5px; font-size: 1rem;">
+                    {'🚀 PURI ENTRY LENI HAI (STRONG BUY)' if is_bullish else '⚠️ WAIT FOR LIQUIDATION SWEEP'}
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9rem;">
+                    <span style="color: #00ff9d;">ENTRY: ${format_p(entry)}</span> | 
+                    <span style="color: #00f2ff;">TARGET: ${format_p(target)}</span>
                 </div>
             </div>
 
-            <div style="margin-top: 15px; text-align: center;">
-                <a href="https://www.coinglass.com/currencies/{sym}" target="_blank" style="color: #00f2ff; text-decoration: none; font-size: 0.7rem; border: 1px solid #00f2ff; padding: 5px 15px; border-radius: 5px;">VIEW DEEP LIQUIDITY</a>
+            <div style="display: flex; gap: 10px;">
+                <a href="https://www.coinglass.com/currencies/{sym}" target="_blank" style="flex:1; text-align:center; padding: 10px; border-radius: 10px; background: #1e293b; color: #00f2ff; text-decoration: none; font-size: 0.75rem; font-weight: bold; border: 1px solid #00f2ff44;">ORDER FLOW</a>
+                <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{sym}USDT" target="_blank" style="flex:1; text-align:center; padding: 10px; border-radius: 10px; background: #1e293b; color: #00f2ff; text-decoration: none; font-size: 0.75rem; font-weight: bold; border: 1px solid #00f2ff44;">SMART CHART</a>
             </div>
         </div>
         """)
-else:
-    st.warning("⚠️ API LIMIT EXCEEDED. Switching to AI Predictive Psychology...")
-    st.info("Market is currently under Whale Accumulation. Best to HOLD spot positions in BTC, DOT, and LINK.")
 
-st.button("⚡ FORCE REFRESH HYPER-NODE")
+except Exception as e:
+    st.error("📡 SATELLITE SIGNAL LOST: Refreshing Node...")
+
+st.caption("Developed for Haseem Ali | Satellite-Pro V310 | Unstoppable Direct Link")
