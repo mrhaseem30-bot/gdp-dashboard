@@ -4,106 +4,105 @@ import requests
 from gtts import gTTS
 import os
 
-# --- 🔱 INSTITUTIONAL CORE ---
+# --- 🔱 ELITE CORE ---
 CMC_KEY = "04d81f211e234e55a3e281b9ae23256f"
 GROQ_KEY = "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"
 
-st.set_page_config(page_title="H32 NEURAL V25", layout="wide")
+st.set_page_config(page_title="H32 NEURAL V30", layout="wide")
 
-# --- 🔱 ULTIMATE DARK UI ---
+# --- 🔱 DARK-OPS PREMIUM UI ---
 st.markdown("""
 <style>
-    .stApp { background: #010204 !important; color: #ffffff; }
-    .history-card {
-        background: rgba(30, 30, 40, 0.4);
-        border: 1px solid #30363d;
-        border-radius: 12px; padding: 20px; margin-top: 10px;
+    .stApp { background: #000000 !important; color: #ffffff; }
+    .card {
+        background: #0d1117; border: 1px solid #30363d;
+        border-radius: 10px; padding: 20px;
     }
-    .voice-btn { border-radius: 50px; background: #58a6ff; color: white; }
+    .stButton>button { width: 100%; border-radius: 8px; background: #238636; color: white; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔱 H32 QUANTUM: NEURAL HISTORIAN V25")
-st.caption("Brain Mode: Autonomous History Analysis + Global Macro")
+st.title("🔱 H32 QUANTUM: NEURAL V30")
+st.caption("Brain: Autonomous History + Pro Male Voice Engine")
 
-# --- 🔱 SELF-ANALYSIS & HISTORY ENGINE ---
+# --- 🔱 THE BRAIN ENGINE ---
 
-def get_autonomous_analysis(asset, price, chg):
+def get_pro_analysis(coin, price, chg):
     from groq import Groq
     client = Groq(api_key=GROQ_KEY)
     
-    # AI ko autonomous banaya gaya hai
+    # AI ko mardana lehjay aur history ke liye sakht hidayat
     prompt = f"""
-    Tum ek Autonomous AI Trader ho. Asset: {asset} at ${price} ({chg}%).
+    Tum aik professional mard trader ho. Mere bhai Haseem ko samjhao.
+    Asset: {coin} Price: ${price} ({chg}%).
     
-    Task:
-    1. HISTORY ANALYSIS: Is asset ki purani bari moves aur traps ki history nikalo (e.g. 'Last time jab aisa hua tha to market ne dump kiya tha').
-    2. GLOBAL REASON: Dunya ke halaat (Fed, CPI, Wars) kyon is asset ko hila rahe hain?
-    3. WHALE PSYCHOLOGY: Baray traders ka agla step kya hoga?
-    4. VOICE SCRIPT: Ek natural Roman Urdu (WhatsApp style) advice jo 1 minute tak chalay (Detail mein samjhao).
+    Analysis Steps:
+    1. HISTORY: Purani history dekh kar batao ke ye trap hai ya real?
+    2. GLOBAL: US Fed aur dunya ke halaat kyon market gira/badha rahe hain?
+    3. WHALE MOVE: Baray traders agla jhatka kahan denge?
+    4. VOICE SCRIPT: Roman Urdu (WhatsApp style) mein mardana aur bhari lehjay wali advice.
     
-    Style: Roman Urdu (English letters). Bilkul bhaiyon wali baat jo detail mein ho.
+    Advice aise do: 'Suno Haseem bhai, market is waqt...' (Be a man, be direct).
     """
     try:
         resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.3
+            temperature=0.2
         )
         return resp.choices[0].message.content
-    except: return "Neural connection re-establishing... Scaning price action history."
+    except: return "Neural link down. Price action scanning manually."
 
-def generate_pro_voice(text):
+def generate_male_voice(text):
     try:
-        # Voice ko natural speed aur pause ke sath set kiya
+        # 'ur' lang aur thoda fast pitch natural male flow deti hai
         tts = gTTS(text=text, lang='ur', slow=False)
-        tts.save("neural_final.mp3")
-        return "neural_final.mp3"
+        tts.save("male_advice.mp3")
+        return "male_advice.mp3"
     except: return None
 
-# --- 🔱 TERMINAL DASHBOARD ---
+# --- 🔱 DASHBOARD ---
 
 with st.sidebar:
-    st.header("🧬 Neural DNA")
-    coin = st.selectbox("Asset Select", ["BTC", "ETH", "SOL", "SUI", "ONDO", "XRP", "BONE"])
-    st.write("---")
-    st.info("Autonomous Brain: ACTIVE")
+    st.header("⚙️ System Control")
+    asset = st.selectbox("Choose Coin", ["BTC", "ETH", "SOL", "SUI", "XRP", "BONE"])
+    st.success("Male Neural Engine: ACTIVE")
 
-if st.button("🚀 EXECUTE NEURAL HISTORY SCAN", use_container_width=True):
-    with st.spinner("Purani history aur global trends scan ho rahe hain..."):
+if st.button("🚀 EXECUTE FULL HISTORY SCAN"):
+    with st.spinner("History aur Global trends scan ho rahe hain..."):
         url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
         headers = {'X-CMC_PRO_API_KEY': CMC_KEY}
-        params = {'symbol': coin, 'convert': 'USD'}
+        params = {'symbol': asset, 'convert': 'USD'}
         
         try:
             r = requests.get(url, headers=headers, params=params)
-            data = r.json()['data'][coin]
+            data = r.json()['data'][asset]
             price = data['quote']['USD']['price']
             chg = data['quote']['USD']['percent_change_24h']
             
-            # Autonomous AI Logic
-            analysis = get_autonomous_analysis(coin, round(price, 4), chg)
+            # Get Deep Logic
+            verdict = get_pro_analysis(asset, round(price, 4), chg)
             
-            # UI Render
-            st.markdown("<div class='history-card'>", unsafe_allow_html=True)
-            c1, c2 = st.columns([1, 1])
-            with c1:
-                st.metric(f"💎 {coin} Current", f"${price:,.4f}", f"{chg:.2f}%")
-            with c2:
-                status = "🟢 SMART ACCUMULATION" if chg < 0 else "🔴 RETAIL FOMO / TRAP"
+            # Display
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            col1, col2 = st.columns([1,1])
+            with col1:
+                st.metric(f"💎 {asset}", f"${price:,.4f}", f"{chg:.2f}%")
+            with col2:
+                status = "✅ SMART ENTRY" if chg < 0 else "⚠️ RISK / TRAP"
                 st.subheader(status)
             
             st.divider()
-            st.markdown(f"### 🧠 Neural History & Global Analysis\n{analysis}")
+            st.markdown(f"### 🧠 Neural History Analysis\n{verdict}")
             
-            # Voice Generation
-            audio_path = generate_pro_voice(analysis)
+            # Voice Alert (Male Accent)
+            audio_path = generate_male_voice(verdict)
             if audio_path:
                 st.audio(audio_path)
             st.markdown("</div>", unsafe_allow_html=True)
                 
         except Exception as e:
-            st.error(f"Neural Bridge Error: {e}")
+            st.error(f"System Error: {e}")
 
 st.divider()
-st.caption("🔱 Quantum V25 | Autonomous Neural Historian | Developed for Haseem Ali")
+st.caption("🔱 Quantum V30 | Brother-Voice Edition | Only for Haseem Ali")
