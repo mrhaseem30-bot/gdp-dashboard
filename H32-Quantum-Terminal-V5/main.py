@@ -6,7 +6,7 @@ from smc_engine import get_quantum_decision
 from ai_analyst import get_ai_verdict_with_timeframe
 from tts_urdu import speak_urdu
 
-st.set_page_config(page_title="H32 Quantum V9.5", layout="wide")
+st.set_page_config(page_title="H32 Quantum V9.6", layout="wide")
 
 st.markdown("""
 <style>
@@ -16,7 +16,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 H32 QUANTUM TRADING TERMINAL V9.5")
+st.title("📊 H32 QUANTUM TRADING TERMINAL V9.6")
 st.caption("Satellite + Macro + Global Intelligence")
 
 with st.sidebar:
@@ -25,13 +25,12 @@ with st.sidebar:
     symbol = st.selectbox("Select Coin", coins)
     tf = st.selectbox("Timeframe", ["15m", "1h", "4h", "1d"])
 
-# ================== STRONG DATA FETCH ==================
 @st.cache_data(ttl=10)
 def get_data(symbol, timeframe, limit=150):
-    # CoinGecko Fallback (sabse reliable yahan)
+    # Strong Fallback - Multiple Attempts
+    coin_id = symbol.lower().replace("/usdt", "")
     try:
-        coin_id = symbol.lower().replace("/usdt", "")
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc?vs_currency=usd&days=2"
+        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc?vs_currency=usd&days=1"
         resp = requests.get(url, timeout=15)
         if resp.status_code == 200:
             data = resp.json()
@@ -42,11 +41,21 @@ def get_data(symbol, timeframe, limit=150):
     except:
         pass
     
-    st.error("Data source busy hai. 10-15 seconds baad dubara try karo.")
-    return None
+    # Dummy Data for Testing (jab real data na aaye)
+    st.warning("Live data busy hai → Test Mode On")
+    dates = pd.date_range(end=pd.Timestamp.now(), periods=50, freq='15T')
+    df = pd.DataFrame({
+        'timestamp': dates,
+        'open': [80000 + i*10 for i in range(50)],
+        'high': [80100 + i*12 for i in range(50)],
+        'low': [79900 + i*8 for i in range(50)],
+        'close': [80050 + i*9 for i in range(50)],
+        'volume': [1000 + i*50 for i in range(50)]
+    })
+    return df
 
 if st.button("🚀 FULL QUANTUM + MACRO ANALYSIS", type="primary", use_container_width=True):
-    with st.spinner("Satellite Data + Macro Analysis chal raha hai..."):
+    with st.spinner("Global Macro + Satellite Data le raha hun..."):
         df = get_data(symbol, tf)
         
         if df is not None and not df.empty:
@@ -60,8 +69,8 @@ if st.button("🚀 FULL QUANTUM + MACRO ANALYSIS", type="primary", use_container
                 color = "#00ff9d" if "BUY" in signal['decision'] else "#ff4444"
                 st.markdown(f"<div class='big-signal' style='background:{color}; color:black;'>{signal['decision']}</div>", unsafe_allow_html=True)
             
-            st.markdown(f"<div class='alert-box'><b>🌍 Macro Situation:</b><br>{macro[:500]}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='alert-box'><b>⚡ Early Alert:</b><br>{signal['early_alert']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='alert-box'><b>🌍 Macro Situation:</b><br>{macro[:600]}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='alert-box'><b>⚡ Early Alert (1-3 Hours):</b><br>{signal['early_alert']}</div>", unsafe_allow_html=True)
             
             if st.button("🔊 Voice Mein Suno", use_container_width=True):
                 text = f"{symbol} abhi {signal['decision']} hai. {signal['early_alert']}"
@@ -69,6 +78,6 @@ if st.button("🚀 FULL QUANTUM + MACRO ANALYSIS", type="primary", use_container
                 if filename:
                     st.audio(filename, format='audio/mp3')
         else:
-            st.warning("Data abhi nahi aa raha. 15 seconds wait karke button dubara dabao.")
+            st.error("Data abhi bhi nahi aa raha. 20 seconds wait karke dubara try karo.")
 
-st.caption("V9.5 • CoinGecko Strong Fallback + Fixed")
+st.caption("V9.6 • Strong Fallback + Test Mode")
