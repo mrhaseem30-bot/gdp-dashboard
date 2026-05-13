@@ -4,8 +4,6 @@ pandas
 pandas_ta
 plotly
 groq
-mistralai
-google-generativeai
 python-dotenv
 gTTS
 requests
