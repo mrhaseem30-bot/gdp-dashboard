@@ -4,53 +4,48 @@ import requests
 from gtts import gTTS
 import os
 
-# --- 🔱 QUANTUM CORE CONFIG ---
+# --- 🔱 INSTITUTIONAL CORE ---
 CMC_KEY = "04d81f211e234e55a3e281b9ae23256f"
 GROQ_KEY = "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"
 
-st.set_page_config(page_title="H32 NEURAL V18", layout="wide")
+st.set_page_config(page_title="H32 QUANTUM V20", layout="wide")
 
-# --- 🔱 PREMIUM OBSIDIAN UI ---
+# --- 🔱 CINEMATIC BLACK UI ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
-    
     .stApp {
-        background: linear-gradient(180deg, #050505 0%, #0a0c12 100%) !important;
-        color: #e0e0e0;
-        font-family: 'Rajdhani', sans-serif;
+        background: radial-gradient(circle at center, #0a0c10 0%, #000000 100%) !important;
+        color: #ffffff;
     }
-    .stButton>button {
-        background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
-        color: black !important; font-weight: bold; border: none; border-radius: 50px;
-        transition: 0.3s all ease;
+    .macro-card {
+        background: rgba(20, 20, 25, 0.7);
+        border: 1px solid #30363d;
+        border-radius: 15px; padding: 25px;
+        margin: 10px 0; backdrop-filter: blur(10px);
     }
-    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 20px #4facfe; }
-    
-    .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px; padding: 25px; margin: 10px 0;
-    }
-    .metric-box { text-align: center; border-right: 1px solid #333; }
-    .status-active { color: #00ff9d; font-weight: bold; text-shadow: 0 0 10px #00ff9d; }
+    .signal-text { font-size: 2.5rem; font-weight: 900; text-align: center; }
+    .global-info { border-left: 4px solid #58a6ff; padding-left: 20px; color: #8b949e; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 🔱 NEURAL LOGIC ENGINE ---
+st.title("🔱 H32 QUANTUM V20: GLOBAL INTELLIGENCE")
+st.caption("Mode: Institutional Macro-Analysis | Whale Flow Tracking")
 
-def get_neural_analysis(coin, price, chg):
+# --- 🔱 GLOBAL SITUATION ENGINE ---
+
+def get_global_macro_analysis(asset, price, chg):
     from groq import Groq
     client = Groq(api_key=GROQ_KEY)
     
-    # Whale Psychology Prompt
+    # Powerful Macro Prompt
     prompt = f"""
-    Elite Whale Trader ki tarah {coin} analyze karo at ${price}.
-    1. Trap Alert: Kya retail panic mein hai?
-    2. Exact Target: Next 4 hours ka potential target aur % drop risk.
-    3. Voice Line: Roman Urdu mein ek choti aur powerfull advice (e.g. 'Abhi sabr karo, whales trap kar rahi hain').
-    Output: Points mein do, Roman Urdu script use karo.
+    Analyze {asset} at ${price}. Current Global Situation kya hai? 
+    1. US Fed interest rates aur CPI ka kya impact hai?
+    2. Global wars ya economic news market ko kyon gira/badha rahi hain?
+    3. Whales is waqt kya psychology use kar rahi hain?
+    4. Voice Advice: Aik choti natural Roman Urdu line (e.g. 'Duniya ke halaat thode kharab hain, abhi sabr karo').
+    
+    Language: Roman Urdu (English alphabet). Har point clear aur logic ke sath ho.
     """
     try:
         resp = client.chat.completions.create(
@@ -59,65 +54,62 @@ def get_neural_analysis(coin, price, chg):
             temperature=0.2
         )
         return resp.choices[0].message.content
-    except: return "Neural link down. Retrying connection..."
+    except: return "Global data link slow hai, magar market structure scanning active hai."
 
-def speak_pro(text):
+def elite_voice_engine(text):
     try:
-        # Voice speed thodi fast rakhi hai taake natural lage
+        # Roman Urdu text ko 'ur' accent ke sath fast generate karna
         tts = gTTS(text=text, lang='ur', slow=False)
-        tts.save("neural_voice.mp3")
-        return "neural_voice.mp3"
+        tts.save("quantum_macro.mp3")
+        return "quantum_macro.mp3"
     except: return None
 
-# --- 🔱 INTERFACE ---
-
-st.title("🔱 H32 NEURAL OBSIDIAN V18")
-st.markdown("Status: <span class='status-active'>QUANTUM BRIDGE ACTIVE</span>", unsafe_allow_html=True)
+# --- 🔱 DASHBOARD ---
 
 with st.sidebar:
-    st.header("🌌 Neural Targets")
-    asset = st.selectbox("Asset Select", ["BTC", "ETH", "SOL", "SUI", "ONDO", "XRP"])
-    st.markdown("---")
-    st.caption("Auto-SMC & Whale Hunt Active")
+    st.header("🌍 Global Watch")
+    selected_coin = st.selectbox("Asset Select", ["BTC", "ETH", "SOL", "SUI", "ONDO", "XRP"])
+    st.write("---")
+    st.info("Scanning US Treasury & Whale Wallets...")
 
-if st.button("🚀 INITIATE NEURAL SCAN", use_container_width=True):
-    with st.spinner("Decoding Whale Flow..."):
+if st.button("🚀 EXECUTE GLOBAL MACRO SCAN", use_container_width=True):
+    with st.spinner("Duniya bhar ke economic indicators scan ho rahe hain..."):
         url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
         headers = {'X-CMC_PRO_API_KEY': CMC_KEY}
-        params = {'symbol': asset, 'convert': 'USD'}
+        params = {'symbol': selected_coin, 'convert': 'USD'}
         
         try:
             r = requests.get(url, headers=headers, params=params)
-            data = r.json()['data'][asset]
+            data = r.json()['data'][selected_coin]
             price = data['quote']['USD']['price']
             chg = data['quote']['USD']['percent_change_24h']
             
-            analysis = get_neural_analysis(asset, round(price, 2), chg)
+            # Macro Brain Logic
+            analysis = get_global_macro_analysis(selected_coin, round(price, 2), chg)
             
-            # --- UI Display ---
-            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            # UI Render
+            st.markdown("<div class='macro-card'>", unsafe_allow_html=True)
             col1, col2 = st.columns([1, 1])
             with col1:
-                st.metric(f"💎 {asset} Index", f"${price:,.2f}", f"{chg:.2f}%")
+                st.metric(f"💎 {selected_coin}", f"${price:,.2f}", f"{chg:.2f}%")
             with col2:
-                # Dynamic Logic
-                if chg < -1:
-                    st.success("🟢 ACCUMULATION MODE: WHALES BUYING THE DIP")
+                if chg > 0:
+                    st.markdown("<div class='signal-text' style='color:#00ff9d;'>BULLISH FLOW</div>", unsafe_allow_html=True)
                 else:
-                    st.warning("🟠 WAIT MODE: RETAIL TRAP DETECTED")
+                    st.markdown("<div class='signal-text' style='color:#ff4444;'>BEARISH TRAP</div>", unsafe_allow_html=True)
             
             st.divider()
-            st.markdown(f"### 🧠 Neural Intelligence Analysis\n{analysis}")
+            st.markdown(f"### 🌍 Global Situation & Macro Analysis\n<div class='global-info'>{analysis}</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Voice Alert
-            voice_line = analysis.split('\n')[-1] # Akhri line uthaye ga advice ke liye
-            audio_path = speak_pro(f"{asset} ka analysis ready hai. {voice_line}")
+            voice_line = analysis.split('\n')[-1] # Advice line pick karega
+            audio_path = elite_voice_engine(f"{selected_coin} scan complete. " + voice_line)
             if audio_path:
                 st.audio(audio_path)
                 
         except Exception as e:
-            st.error(f"Bridge Error: {e}")
+            st.error(f"Global Link Error: {e}")
 
 st.divider()
-st.caption("🔱 Quantum V18 Elite | Developed for Haseem Ali | Obsidian Stable")
+st.caption("🔱 Quantum V20 | Developed for Haseem Ali | Global Macro Core")
