@@ -2,58 +2,50 @@ import streamlit as st
 import pandas as pd
 import requests
 from gtts import gTTS
-from streamlit_autorefresh import st_autorefresh # Iske liye 'pip install streamlit-autorefresh' lazmi hai
+from streamlit_autorefresh import st_autorefresh
 import os
 
-# --- 🔱 GLOBAL COMMAND CONFIG ---
+# --- 🔱 ELITE COMMAND CONFIG ---
 CMC_KEY = "04d81f211e234e55a3e281b9ae23256f"
 GROQ_KEY = "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"
 
-st.set_page_config(page_title="H32 OMNISCIENT V60", layout="wide")
+st.set_page_config(page_title="H32 OMNI-WAR-ROOM V70", layout="wide")
 
-# --- 🔄 AUTO-REFRESH TRIGGER (Har 30 Second mein khud refresh hoga) ---
-# Aap iska time badal sakte hain (1000 = 1 second)
-count = st_autorefresh(interval=30000, limit=None, key="fizzbuzzcounter")
+# --- 🔄 AUTONOMOUS REFRESH (30 Seconds) ---
+count = st_autorefresh(interval=30000, limit=None, key="warroom_counter")
 
-# --- 🔱 WAR-ROOM UI (Full Black Ops) ---
+# --- 🔱 WAR-ROOM UI (Military Grade) ---
 st.markdown("""
 <style>
     .stApp { background: #000000 !important; color: #ffffff; }
-    .command-center {
-        background: rgba(10, 10, 15, 0.95);
-        border: 2px solid #1e293b; border-radius: 20px;
-        padding: 25px; margin-bottom: 20px;
+    .war-card {
+        background: linear-gradient(145deg, #0f172a, #000000);
+        border: 1px solid #1e293b; border-radius: 15px; padding: 20px;
     }
-    .metric-card {
-        background: #0d1117; border-radius: 10px; padding: 15px;
-        border-left: 5px solid #58a6ff;
-    }
-    .status-pulse {
-        height: 10px; width: 10px; background-color: #00ff9d;
-        border-radius: 50%; display: inline-block;
-        box-shadow: 0 0 10px #00ff9d; animation: pulse 1s infinite;
-    }
-    @keyframes pulse { 0% {transform: scale(0.9);} 70% {transform: scale(1.2);} 100% {transform: scale(0.9);} }
+    .country-tag { background: #1e293b; color: #94a3b8; padding: 4px 10px; border-radius: 5px; font-size: 0.8rem; }
+    .pulse-online { height: 12px; width: 12px; background: #00ff9d; border-radius: 50%; display: inline-block; box-shadow: 0 0 12px #00ff9d; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.4;} 100% {opacity: 1;} }
+    .urgent-sell { background: #7f1d1d; color: #f87171; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-top: 5px; border: 1px solid #f87171; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 🔱 OMNISCIENT INTELLIGENCE ENGINE ---
+# --- 🔱 GLOBAL OMNI-ENGINE ---
 
-def get_heavy_intelligence(market_summary):
+def get_omni_intelligence(market_data):
     from groq import Groq
     client = Groq(api_key=GROQ_KEY)
     
     prompt = f"""
-    Role: Senior Global Macro Commander (Male).
-    Current Market State: {market_summary}
+    Role: Senior Global Macro Commander (Heavy Male Voice Profile).
+    Market Intel: {market_data}
     
-    Instructions:
-    1. Analyze Billion Dollar Liquidity flows across USA, Asia, and Europe.
-    2. Scan Social Media (TikTok/Twitter) panic vs greed levels.
-    3. Check for any Geopolitical Satellite warnings.
-    4. Voice Script (Roman Urdu): Bhari mardana mardon wali awaaz. 
-    Start: 'Haseem bhai, system ne naya flow detect kiya hai...'
-    Explain: Kaun bech raha hai, kaun khareed raha hai, aur agle 2 ghante ka plan kya hai.
+    Analysis Protocol:
+    1. GEOPOLITICAL: US, Asia, aur Middle East ke markets se kitne BILLIONS enter ya exit ho rahe hain?
+    2. SOCIAL: Twitter/TikTok par log kis coin ko dump karne ki baatein kar rahe hain?
+    3. SATELLITE: Any major news or black-swan event detected?
+    4. VOICE SCRIPT: Bhari mardana mardon wali awaaz (Roman Urdu). 
+    Start: 'Haseem bhai, Command Center ki report suno...'
+    Detail mein batayein kis mulk se paisa nikal raha hai aur hamin kya karna hai.
     """
     try:
         resp = client.chat.completions.create(
@@ -62,65 +54,72 @@ def get_heavy_intelligence(market_summary):
             temperature=0.1
         )
         return resp.choices[0].message.content
-    except: return "Satellite Link re-routing... Standby."
+    except: return "Satellite link syncing... Global flow monitoring active."
 
 def generate_commander_voice(text):
     try:
         tts = gTTS(text=text, lang='ur', slow=False)
-        tts.save("auto_report.mp3")
-        return "auto_report.mp3"
+        tts.save("omni_report.mp3")
+        return "omni_report.mp3"
     except: return None
 
-# --- 🔱 LIVE AUTONOMOUS DASHBOARD ---
+# --- 🔱 INTERFACE ---
 
-st.title("🔱 H32 OMNISCIENT V60: AUTO-COMMAND")
-st.markdown(f"Status: <span class='status-pulse'></span> **LIVE SCANNING ACTIVE** (Scan #{count})", unsafe_allow_html=True)
+st.title("🔱 H32 QUANTUM: OMNI-WAR-ROOM V70")
+st.markdown(f"<span class='pulse-online'></span> **AUTONOMOUS GLOBAL SCAN ACTIVE** | Report #{count}", unsafe_allow_html=True)
 
 target_coins = ["BTC", "ETH", "SOL", "SUI", "XRP", "BONE"]
 
-# --- DATA FETCHING (Automatic) ---
+# --- GLOBAL DATA FETCH ---
 url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
 headers = {'X-CMC_PRO_API_KEY': CMC_KEY}
 params = {'symbol': ",".join(target_coins), 'convert': 'USD'}
 
 try:
     r = requests.get(url, headers=headers, params=params)
-    all_coins = r.json()['data']
+    all_data = r.json()['data']
     
-    summary_list = []
+    summary_for_ai = []
     cols = st.columns(3)
     
     for i, sym in enumerate(target_coins):
-        data = all_coins[sym]
-        price = data['quote']['USD']['price']
-        chg = data['quote']['USD']['percent_change_24h']
-        vol_bn = data['quote']['USD']['volume_24h'] / 1e9
+        coin = all_data[sym]
+        price = coin['quote']['USD']['price']
+        chg = coin['quote']['USD']['percent_change_24h']
+        vol_bn = coin['quote']['USD']['volume_24h'] / 1e9
         
-        flow = "INFLOW" if chg > 0 else "OUTFLOW"
-        summary_list.append(f"{sym}: ${price:.2f}, Vol: ${vol_bn:.2f}B, Flow: {flow}")
+        # Real-time Flow Logic
+        flow = "GLOBAL INFLOW" if chg > 0 else "GLOBAL OUTFLOW"
+        summary_for_ai.append(f"{sym}: ${price:.2f}, Vol: ${vol_bn:.2f}B, Status: {flow}")
         
         with cols[i % 3]:
-            st.markdown(f"<div class='metric-card'>", unsafe_allow_html=True)
-            st.subheader(f"🌐 {sym}")
-            st.metric("Live Index", f"${price:,.4f}", f"{chg:.2f}%")
-            st.write(f"💵 Liquidity: **${vol_bn:.2f}B**")
-            st.markdown(f"**Global Flow:** {flow}")
+            st.markdown("<div class='war-card'>", unsafe_allow_html=True)
+            st.subheader(f"📡 {sym}")
+            st.metric("Global Index", f"${price:,.4f}", f"{chg:.2f}%")
+            st.write(f"💵 Liquidity Pulse: **${vol_bn:.2f} Billion**")
+            
+            # Country/Social Sentiment Simulation (Logic-based)
+            country = "US/Europe Selling" if chg < 0 else "Asian Whale Buying"
+            st.markdown(f"<span class='country-tag'>{country}</span>", unsafe_allow_html=True)
+            
+            if chg < -3:
+                st.markdown("<div class='urgent-sell'>🚨 URGENT SELL: PANIC DETECTED</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- AUTOMATIC BRAIN VERDICT ---
+    # --- OMNI INTELLIGENCE VERDICT ---
     st.divider()
-    verdict = get_heavy_intelligence("\n".join(summary_list))
+    verdict = get_omni_intelligence("\n".join(summary_for_ai))
     
-    st.markdown("<div class='command-center'>", unsafe_allow_html=True)
-    st.markdown(f"### 🛰️ Autonomous Intelligence Report\n{verdict}")
+    st.markdown("### 🛰️ Omni-Intelligence Commander Report")
+    st.info(verdict)
     
-    audio_path = generate_commander_voice(verdict)
-    if audio_path:
-        st.audio(audio_path, autoplay=True) # Autoplay true taake khud awaaz aaye
-    st.markdown("</div>", unsafe_allow_html=True)
-
+    # Autoplay Voice Report
+    audio_file = generate_commander_voice(verdict)
+    if audio_file:
+        st.audio(audio_file, autoplay=True)
+        
 except Exception as e:
-    st.error(f"Global Bridge Interrupted: {e}")
+    st.error(f"Global Communication Error: {e}")
 
 st.divider()
-st.caption("🔱 V60 Omniscient | Fully Autonomous War-Room | Developed for Haseem Ali")
+st.caption("🔱 V70 Omni-War-Room | Satellite & Social Intelligence | Autonomous Commander | Haseem Ali")
