@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pand
 import requests
 from gtts import gTTS
 import os
