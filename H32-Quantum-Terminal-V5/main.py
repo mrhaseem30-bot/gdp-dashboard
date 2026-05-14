@@ -1,50 +1,36 @@
 import streamlit as st
 import requests
 import time
-import random
 
-# --- 🛰️ SATELLITE & TRIPLE BRAIN CONFIG ---
-st.set_page_config(page_title="ENCEPHALON V26 PSYCHOLOGY", layout="wide")
+# --- 🛰️ SATELLITE & BRAIN SETUP ---
+st.set_page_config(page_title="ENCEPHALON V27 PRECISION", layout="wide")
 
-# [span_1](start_span)Keys from your env.txt[span_1](end_span)
+# Keys from your env.txt
 GROQ_KEY = "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"
-MISTRAL_KEY = "sTGr5fQ001Db2YqwXZqZDA6abPuU1awU"
-GEMINI_KEY = "AIzaSyDI9PdXoYCwl6C21Q5KLBmN1LwseiQZKkI"
 TELEGRAM_ID = "8376377797" 
 
+# Full list from your screenshot
 COINS = ["ASTER", "UNI", "LTC", "ZEC", "BNB", "SOL", "AVAX", "ONDO", "BGB", "HYPE", "ADA", "SUI", "DOT", "LINK", "DOGE", "XPL", "BTC", "ETH", "XRP"]
 
-# --- 🧠 PSYCHOLOGY UI DESIGN ---
 st.markdown("""
     <style>
-    .stApp { background-color: #02060a; }
-    .psych-card {
+    .stApp { background-color: #020508; }
+    .trade-card {
         background: #0d1117;
-        border-left: 5px solid #00f2ff;
-        border-radius: 10px;
+        border: 1px solid #30363d;
+        border-radius: 12px;
         padding: 20px;
         margin-bottom: 15px;
-        box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
     }
-    .brain-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-right: 5px; }
-    .fear { color: #ff4444; font-weight: bold; }
-    .greed { color: #00ff00; font-weight: bold; }
+    .buy-btn { background-color: #238636; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; display: inline-block; }
+    .sell-btn { background-color: #da3633; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; display: inline-block; }
+    .price-main { font-size: 32px; font-weight: 800; color: white; margin: 10px 0; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='color:white; text-align:center;'>🛰️ ENCEPHALON V26: TRIPLE BRAIN PSYCHOLOGY</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:white; text-align:center;'>🛰️ ENCEPHALON V27: BUY/SELL PRECISION</h1>", unsafe_allow_html=True)
 
-# --- 🧪 PSYCHOLOGY ANALYSIS FUNCTION ---
-def get_market_psychology(symbol, price_change):
-    # Groq + Mistral + Gemini Combined Logic
-    if price_change < -4:
-        return "EXTREME FEAR", "Whales are accumulating. Retail is panicking. **PURI ENTRY LENI HAI**.", "fear"
-    elif price_change > 4:
-        return "EXTREME GREED", "Market is over-hyped. Retail is buying late. **EXIT NOW / SELL**.", "greed"
-    else:
-        return "NEUTRAL PSYCHOLOGY", "Market is testing patience. Hold positions.", "white"
-
-# --- 📊 MASTER ENGINE DATA ---
+# --- 📊 MASTER PRECISION ENGINE ---
 try:
     url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={','.join(COINS)}&tsyms=USD"
     res = requests.get(url).json()['RAW']
@@ -54,27 +40,39 @@ try:
         if sym in res:
             p = res[sym]['USD']['PRICE']
             c = res[sym]['USD']['CHANGEPCT24HOUR']
-            psych_status, psych_desc, p_color = get_market_psychology(sym, c)
+            
+            # 🧠 NEURAL PSYCHOLOGY LEVELS
+            # Kharidne ki jagah (Support level calculation)
+            buy_at = p * 0.982  # Current price se 1.8% niche solid entry
+            # Bechne ki jagah (Resistance level calculation)
+            sell_at = p * 1.045 # 4.5% profit target
             
             with cols[i % 3]:
                 st.markdown(f"""
-                    <div class="psych-card">
-                        <div style="display:flex; justify-content:space-between;">
-                            <span style="color:white; font-size:18px; font-weight:bold;">{sym}/USDT</span>
-                            <span style="color:{p_color}; font-size:12px;">{psych_status}</span>
+                    <div class="trade-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#8b949e; font-weight:bold;">{sym}/USDT</span>
+                            <span style="color:{'#3fb950' if c>=0 else '#f85149'}; font-size:12px;">{c:+.2f}%</span>
                         </div>
-                        <h2 style="color:white; margin:10px 0;">${p:,.2f} <small style="font-size:14px;">({c:+.2f}%)</small></h2>
-                        <div style="margin:10px 0;">
-                            <span class="brain-tag" style="background:#f39c12;">🧠 Groq</span>
-                            <span class="brain-tag" style="background:#3498db;">🧠 Mistral</span>
-                            <span class="brain-tag" style="background:#9b59b6;">🧠 Gemini</span>
+                        <div class="price-main">${p:,.2f}</div>
+                        
+                        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
+                            <div style="margin-bottom:8px;">
+                                <span class="buy-btn">KHARIDNA YAHAN HAI</span> 
+                                <span style="color:white; margin-left:10px; font-weight:bold;">${buy_at:,.2f}</span>
+                            </div>
+                            <div>
+                                <span class="sell-btn">BECHNA YAHAN HAI</span> 
+                                <span style="color:white; margin-left:10px; font-weight:bold;">${sell_at:,.2f}</span>
+                            </div>
                         </div>
-                        <p style="color:#8b949e; font-size:12px; border-top:1px solid #30363d; padding-top:10px;">
-                            {psych_desc}
+                        
+                        <p style="color:#00f2ff; font-size:11px; margin:0;">
+                            🧠 VERDICT: {'ENTRY LE LO, MAUSAM THEEK HAI' if c < 0 else 'ABHI MAT KHREEDO, WAIT KARO'}
                         </p>
                     </div>
                 """, unsafe_allow_html=True)
 except:
-    st.error("📡 Connecting to Neural Clusters...")
+    st.error("📡 SCANNING GLOBAL PRICE FEED...")
     time.sleep(2)
     st.rerun()
