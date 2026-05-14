@@ -9,46 +9,25 @@ import ssl
 # --- 🔱 CORE CONFIG ---
 st.set_page_config(page_title="H32 OMNICORE V1.0", layout="wide")
 
-# Background thread aur UI ke darmiyan data share karne ke liye
-if 'live_cache' not in st.session_state:
-    st.session_state.live_cache = {
-        "BTC": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."},
-        "ETH": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."},
-        "SOL": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."},
-        "SUI": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."},
-        "XRP": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."},
-        "DOT": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."},
-        "LINK": {"price": 0.0, "change": 0.0, "signal": "CONNECTING..."}
+# GLOBAL DATA (Thread isko hamesha dekh sakega)
+if 'live_data' not in st.globals:
+    st.globals['live_data'] = {
+        "BTC": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
+        "ETH": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
+        "SOL": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
+        "SUI": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
+        "XRP": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
+        "DOT": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
+        "LINK": {"price": 0.0, "change": 0.0, "signal": "WAITING..."}
     }
 
-# --- 🎨 SUPREME UI ---
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap');
-    .stApp { background: #010204 !important; }
-    .hyper-card {
-        background: rgba(10, 15, 25, 0.95);
-        border-radius: 18px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border: 1px solid #00f2ff22;
-    }
-    .price-display { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: #fff; }
-    .neon-green { color: #00ff9d; }
-    .neon-red { color: #ff4444; }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("<h1 style='text-align: center; color: #fff; font-family: \"Orbitron\", sans-serif;'>🔱 OMNI-CORE LIVE</h1>", unsafe_allow_html=True)
-
-# --- 📡 FIX: BACKGROUND ENGINE ---
+# --- 📡 BACKGROUND ENGINE (FIXED) ---
 def on_message(ws, message):
     try:
         msg = json.loads(message)
         if 'data' in msg:
             d = msg['data']
             sym = d['s'].replace('USDT', '')
-            
             price = float(d['c'])
             change = float(d['P'])
             
@@ -56,42 +35,51 @@ def on_message(ws, message):
             elif change < -1.5: sig = "⚠️ LIQUIDITY SWEEP"
             else: sig = "⚖️ MONITORING"
 
-            # Session state ko thread safe tareeqe se update karna
-            st.session_state.live_cache[sym] = {
-                "price": price, 
-                "change": change, 
-                "signal": sig
-            }
+            # GLOBAL dictionary update kar rahe hain (st.session_state use nahi kar rahe)
+            st.globals['live_data'][sym] = {"price": price, "change": change, "signal": sig}
     except:
         pass
 
 def start_socket():
-    streams = [f"{s.lower()}usdt@ticker" for s in st.session_state.live_cache.keys()]
+    streams = [f"{s.lower()}usdt@ticker" for s in st.globals['live_data'].keys()]
     url = f"wss://stream.binance.com:9443/stream?streams={'/'.join(streams)}"
     ws = websocket.WebSocketApp(url, on_message=on_message)
-    # SSL fix for cloud
     ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
 
-if 'socket_active' not in st.session_state:
-    st.session_state.socket_active = True
-    threading.Thread(target=start_socket, daemon=True).start()
+# Thread ko check karna ke wo pehle se chal to nahi raha
+if 'bg_thread' not in st.globals:
+    st.globals['bg_thread'] = threading.Thread(target=start_socket, daemon=True)
+    st.globals['bg_thread'].start()
 
-# --- 📱 LIVE DASHBOARD ---
-for sym, info in st.session_state.live_cache.items():
-    c_color = "neon-green" if info['change'] >= 0 else "neon-red"
-    p_val = f"{info['price']:,.2f}" if info['price'] > 1 else f"{info['price']:,.4f}"
+# --- 🎨 UI DESIGN ---
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap');
+    .stApp { background: #010204 !important; }
+    .card { background: rgba(10, 15, 25, 0.95); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid #00f2ff22; }
+    .price { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #fff; font-weight: 900; }
+    .green { color: #00ff9d; }
+    .red { color: #ff4444; }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h1 style='text-align: center; color: #fff; font-family: \"Orbitron\", sans-serif;'>🔱 OMNI-CORE LIVE</h1>", unsafe_allow_html=True)
+
+# UI Display Loop
+for sym, info in st.globals['live_data'].items():
+    color = "green" if info['change'] >= 0 else "red"
+    p_format = f"{info['price']:,.2f}" if info['price'] > 1 else f"{info['price']:,.4f}"
     
     st.markdown(f"""
-    <div class="hyper-card">
+    <div class="card">
         <div style="display: flex; justify-content: space-between;">
-            <b style="color: #fff; font-size: 1.1rem;">{sym}/USDT</b>
-            <span class="{c_color}" style="font-weight: bold;">{info['change']:+.2f}%</span>
+            <b style="color: #fff;">{sym}/USDT</b>
+            <span class="{color}">{info['change']:+.2f}%</span>
         </div>
-        <div class="price-display">${p_val}</div>
-        <div style="color: #58a6ff; font-size: 0.7rem; margin-top: 5px;">VERDICT: {info['signal']}</div>
+        <div class="price">${p_format}</div>
+        <div style="color: #58a6ff; font-size: 0.8rem; margin-top: 5px;">{info['signal']}</div>
     </div>
     """, unsafe_allow_html=True)
 
-# UI Refresh
 time.sleep(2)
 st.rerun()
