@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import plotly.graph_objects as go
+import plotly.graph_objects as go   # ← Yeh sahi kiya hai
+
 from data_fetcher import DataFetcher
 from smc_engine import SMCEngine
 from ai_analyst import AIAnalyst
