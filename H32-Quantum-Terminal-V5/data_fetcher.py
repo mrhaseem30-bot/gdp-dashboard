@@ -3,7 +3,9 @@ import pandas as pd
 
 class DataFetcher:
     def __init__(self):
-        self.exchange = ccxt.binance({'enableRateLimit': True})
+        self.exchange = ccxt.binance({
+            'enableRateLimit': True,
+        })
     
     def get_ohlcv(self, symbol, timeframe="4h", limit=200):
         try:
@@ -11,5 +13,6 @@ class DataFetcher:
             df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             df['time'] = pd.to_datetime(df['timestamp'], unit='ms')
             return df[['time', 'open', 'high', 'low', 'close', 'volume']]
-        except:
+        except Exception as e:
+            print(f"Error in {symbol}: {e}")
             return None
