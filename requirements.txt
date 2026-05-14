@@ -4,5 +4,3 @@ numpy
 plotly
 ccxt
 pandas_ta
-python-dotenv
-requests
