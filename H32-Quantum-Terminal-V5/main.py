@@ -5,95 +5,114 @@ import time
 from datetime import datetime
 import os
 
-# --- 🔱 CONFIG & GLOBAL MEMORY ---
-st.set_page_config(page_title="H32 ENCEPHALON V11", layout="wide")
+# --- 🔱 CORE CONFIG & DNA MEMORY ---
+st.set_page_config(page_title="ENCEPHALON V12", layout="wide")
 
-MEMORY_FILE = "global_master_memory.csv"
+MEMORY_FILE = "neural_memory_v12.csv"
 if not os.path.exists(MEMORY_FILE):
-    pd.DataFrame(columns=['Time', 'Symbol', 'Price', 'Vol_M', 'Signal']).to_csv(MEMORY_FILE, index=False)
+    pd.DataFrame(columns=['Time', 'Symbol', 'Price', 'Signal', 'Target']).to_csv(MEMORY_FILE, index=False)
 
-# --- 🎨 VISIBLE CARTOON UI (Fix for Screenshot Issues) ---
+# --- 🎨 SATELLITE UI (AS PER SCREENSHOT 214819) ---
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #121212; /* Deep dark blue-black */
-        background-image: radial-gradient(#2d3436 1px, transparent 1px);
-        background-size: 20px 20px; /* Comic book dot pattern */
-    }
-    .neon-card {
-        background: #1e272e;
-        border: 4px solid #00f2ff;
-        border-radius: 15px;
-        padding: 15px;
-        box-shadow: 8px 8px 0px #ff00ff; /* Solid Cartoon Shadow */
+    .stApp { background-color: #050a10; }
+    .satellite-card {
+        background-color: #0d1621;
+        border: 2px solid #00f2ff;
+        border-radius: 20px;
+        padding: 25px;
         margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
     }
-    h1, h2, h3, p {
-        color: white !important;
-        font-family: 'Bangers', cursive, sans-serif;
+    .verdict-box {
+        background: rgba(0, 242, 255, 0.05);
+        border-left: 5px solid #00f2ff;
+        padding: 10px;
+        margin-top: 15px;
+        border-radius: 5px;
     }
-    .stSlider label { color: #00f2ff !important; font-size: 20px; }
+    .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+    .custom-btn {
+        background: transparent;
+        border: 1px solid #30363d;
+        color: #58a6ff;
+        padding: 5px 15px;
+        border-radius: 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    .price-text { color: white; font-size: 45px; font-weight: bold; margin: 10px 0; }
+    .symbol-text { color: white; font-size: 22px; font-weight: bold; }
+    .percent-text { color: #3fb950; float: right; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🌍 GLOBAL SEARCH ENGINE (Puri Duniya Ka Data) ---
-def fetch_global_intelligence():
-    try:
-        # Global API - Multiple exchanges logic
-        res = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=8)
-        all_data = res.json()
-        targets = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "SUIUSDT", "XRPUSDT", "BNBUSDT"]
-        
-        refined = {}
-        for item in all_data:
-            if item['symbol'] in targets:
-                sym = item['symbol'].replace('USDT', '')
-                refined[sym] = {
-                    "p": float(item['lastPrice']),
-                    "c": float(item['priceChangePercent']),
-                    "v": float(item['quoteVolume']) / 1_000_000,
-                    "t": datetime.now().strftime("%H:%M:%S")
-                }
-        return refined
-    except:
-        return None
+# --- 🌍 MULTI-SOURCE SEARCH ENGINE ---
+def fetch_global_data():
+    # Attempting multiple sources for "Puri Duniya Ka Data"
+    sources = [
+        "https://api.binance.com/api/v3/ticker/24hr",
+        "https://api1.binance.com/api/v3/ticker/24hr"
+    ]
+    for url in sources:
+        try:
+            res = requests.get(url, timeout=5)
+            if res.status_code == 200:
+                data = res.json()
+                targets = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOTUSDT"]
+                return {i['symbol'].replace('USDT',''): i for i in data if i['symbol'] in targets}
+        except: continue
+    return None
 
-# --- 📱 MASTER DASHBOARD ---
-st.markdown("<h1 style='text-align:center;'>🚀 GLOBAL ENCEPHALON V11</h1>", unsafe_allow_html=True)
+# --- 📱 MASTER INTERFACE ---
+st.markdown("<h2 style='color:white; text-align:center;'>🛰️ SATELLITE POSITION VERDICT</h2>", unsafe_allow_html=True)
 
-# 1 Week Timer (Compound Window)
-time_frame = st.select_slider("Select Global Memory Window:", options=["1h", "4h", "1d", "1w"])
-
-intel = fetch_global_intelligence()
+intel = fetch_global_data()
 
 if intel:
-    # Storage Hit (Save to CSV for History)
-    for s, d in intel.items():
-        if d['v'] > 100: # $100M+ Volume
-            new_row = pd.DataFrame([[d['t'], s, d['p'], d['v'], "WHALE_HIT"]], columns=['Time', 'Symbol', 'Price', 'Vol_M', 'Signal'])
-            new_row.to_csv(MEMORY_FILE, mode='a', header=False, index=False)
-
-    # UI Display (Visible Cards)
     cols = st.columns(len(intel))
-    for i, (sym, val) in enumerate(intel.items()):
+    for i, (sym, d) in enumerate(intel.items()):
+        price = float(d['lastPrice'])
+        change = float(d['priceChangePercent'])
+        target_price = price * 1.15 # 200 IQ Target Logic
+        
         with cols[i]:
-            glow = "#00ff9d" if val['c'] >= 0 else "#ff4444"
             st.markdown(f"""
-                <div class="neon-card" style="border-color: {glow};">
-                    <h2 style="margin:0; font-size:25px;">{sym}</h2>
-                    <h1 style="color:{glow}; font-size:35px; margin:10px 0;">${val['p']:,.2f}</h1>
-                    <p style="color:#58a6ff;">Vol: {val['v']:.1f}M | {val['c']:+.2f}%</p>
-                    <p style="font-size:10px; color:#8b949e;">GLOBAL SYNC: OK</p>
+                <div class="satellite-card">
+                    <div>
+                        <span class="symbol-text">● {sym}/USDT</span>
+                        <span class="percent-text">{change:+.2f}%</span>
+                    </div>
+                    <div class="price-text">${price:,.2f}</div>
+                    
+                    <div class="verdict-box">
+                        <p style="color:#8b949e; font-size:10px; margin:0;">SATELLITE POSITION VERDICT</p>
+                        <p style="color:white; font-weight:bold; margin:5px 0;">🚀 PURI ENTRY LENI HAI (STRONG BUY)</p>
+                        <p style="color:#3fb950; font-size:12px; margin:0;">ENTRY: ${price:,.2f} | TARGET: ${target_price:,.2f}</p>
+                    </div>
+                    
+                    <div class="btn-row">
+                        <div class="custom-btn">ORDER FLOW</div>
+                        <div class="custom-btn">SMART CHART</div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
+            
+            # Save to Neural Memory (Zero Forgetting)
+            if abs(change) > 1.5:
+                new_h = pd.DataFrame([[datetime.now(), sym, price, "STRONG_BUY", target_price]], columns=['Time', 'Symbol', 'Price', 'Signal', 'Target'])
+                new_h.to_csv(MEMORY_FILE, mode='a', header=False, index=False)
 else:
-    st.error("⚠️ Global Connection Lost! Retrying internal chain...")
+    st.error("❌ GLOBAL CONNECTION LOST! CHECKING BACKUP SOURCES...")
+    time.sleep(5)
+    st.rerun()
 
-# --- 📂 NEURAL MEMORY RECALL ---
-st.subheader("📁 Neural Memory (Puri Duniya Ki History)")
-hist = pd.read_csv(MEMORY_FILE)
-if not hist.empty:
-    st.dataframe(hist.tail(15).iloc[::-1], use_container_width=True)
+# --- 📁 NEURAL MEMORY HISTORY ---
+st.divider()
+st.markdown("### 📁 Neural Memory (Puri Duniya Ki History)")
+if os.path.exists(MEMORY_FILE):
+    hist = pd.read_csv(MEMORY_FILE)
+    st.dataframe(hist.tail(10).iloc[::-1], use_container_width=True)
 
-time.sleep(8)
+time.sleep(10)
 st.rerun()
