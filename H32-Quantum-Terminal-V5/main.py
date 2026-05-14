@@ -1,100 +1,95 @@
 import streamlit as st
 import requests
+import time
+from datetime import datetime
 import random
 
-# --- 🔱 SATELLITE CORE CONFIG ---
-CMC_KEY = "04d81f211e234e55a3e281b9ae23256f"
-st.set_page_config(page_title="H32 SATELLITE-PRO V310", layout="wide")
+st.set_page_config(page_title="H32 SATELLITE-PRO V900", layout="wide")
 
-# --- 🎨 HYPER-CHAMAKDAR SATELLITE UI ---
 st.markdown("""
 <style>
-    .stApp { background: #010204 !important; }
-    .sat-card {
-        background: rgba(15, 23, 42, 0.9);
-        border: 2px solid #00f2ff;
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 30px;
-        box-shadow: 0 0 20px #00f2ff33, inset 0 0 15px #00f2ff11;
-        backdrop-filter: blur(10px);
-    }
-    .neon-green { color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
-    .neon-red { color: #ff4444; text-shadow: 0 0 10px #ff4444; }
-    .sat-header {
-        background: linear-gradient(90deg, #00f2ff, #0062ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 900;
-        text-align: center;
-        font-size: 2.5rem;
-    }
+    .main {background-color: #000000; color: #00f2ff; font-family: 'Courier New', monospace;}
+    .card {background: #0a1428; border: 2px solid #00f2ff; border-radius: 18px; padding: 22px; margin: 14px 0;}
+    .entry {background: #00ff9d; color: black; padding: 12px; border-radius: 30px; text-align: center; font-weight: bold;}
+    .wait {background: #ffaa00; color: black; padding: 12px; border-radius: 30px; text-align: center; font-weight: bold;}
+    .sell {background: #ff3366; color: white; padding: 12px; border-radius: 30px; text-align: center; font-weight: bold;}
+    .header {font-size: 2.6rem; font-weight: 900; text-align: center; margin-bottom: 8px;}
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 class='sat-header'>🔱 SATELLITE-PRO V310</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='header'>🔱 SATELLITE-PRO V900</h1>", unsafe_allow_html=True)
+st.success("🛰️ FULL PSYCHOLOGY + SMART MONEY + MANIPULATION DETECTOR ACTIVE")
 
-# --- 📡 SATELLITE LINK STATUS ---
-st.success("🛰️ DIRECT SATELLITE CONNECTION ESTABLISHED | NODE: KARACHI-G1")
+coins = ["BTC","ETH","SOL","SUI","XRP","BNB","AVAX","ONDO","HYPE","DOT","LINK"]
 
-# --- 🧠 GLOBAL IQ ENGINE ---
-st.info("**GLOBAL PSYCHOLOGY:** 🏛️ Institutional Safe-Haven Mode (Trend: 7-10 Days Bullish)")
+@st.cache_data(ttl=5)
+def get_data():
+    try:
+        r = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=5)
+        if r.status_code == 200:
+            return {item['symbol'].replace('USDT',''): item for item in r.json() if item['symbol'].endswith('USDT')}
+    except:
+        pass
+    return {}
 
-target_coins = ["BTC", "ETH", "SOL", "SUI", "XRP", "BONE", "DOT", "LINK"]
+data = get_data()
 
-# --- 🛠️ DATA CLEANING FUNCTION (Fixing the ValueError) ---
-def format_p(val):
-    if val > 1:
-        return f"{val:,.2f}"
-    else:
-        return f"{val:,.4f}"
+placeholder = st.empty()
 
-try:
-    url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
-    r = requests.get(url, headers={'X-CMC_PRO_API_KEY': CMC_KEY}, params={'symbol': ",".join(target_coins)})
-    data = r.json()['data']
-
-    for sym in target_coins:
-        coin = data[sym]
-        p = coin['quote']['USD']['price']
-        c24 = coin['quote']['USD']['percent_change_24h']
-        is_bullish = c24 > 0
+while True:
+    with placeholder.container():
+        if data:
+            for sym in coins:
+                if sym in data:
+                    d = data[sym]
+                    price = float(d['lastPrice'])
+                    chg = float(d['priceChangePercent'])
+                    vol = float(d['quoteVolume'])
+                    
+                    liq = min(98, int(vol / 8000000))
+                    momentum = chg * (vol / 100000000)
+                    
+                    # Advanced Psychology Engine
+                    if chg <= -7 and vol > 280000000:
+                        verdict = "🔴 HEAVY DISTRIBUTION / MANIPULATION"
+                        suggestion = "Smart Money Selling - Urgent Exit"
+                        status = "sell"
+                    elif chg > 4.5 and vol > 350000000 and liq > 78:
+                        verdict = "🟢 INSTITUTIONAL ACCUMULATION"
+                        suggestion = "Entry Leni Chahiye - Big Players Buying"
+                        status = "entry"
+                    elif momentum > 22 and chg > 3:
+                        verdict = "🟢 HIGH PROBABILITY MOMENTUM"
+                        suggestion = "Strong Retail + Smart Money Flow"
+                        status = "entry"
+                    elif chg < -4 and vol > 250000000:
+                        verdict = "🟡 POSSIBLE FAKE DUMP / TRAP"
+                        suggestion = "Abhi Mat Enter Karo - Manipulation Ho Sakta Hai"
+                        status = "wait"
+                    else:
+                        verdict = "🟡 NEUTRAL - ACCUMULATION PHASE"
+                        suggestion = "Clear Signal Nahi - Wait Karo"
+                        status = "wait"
+                    
+                    target = price * 1.24 if chg > 0 else price * 0.87
+                    
+                    st.html(f"""
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between;">
+                            <h2>{sym}/USDT</h2>
+                            <h3 style="color:{'#00ff9d' if chg>0 else '#ff3366'}">{chg:+.2f}%</h3>
+                        </div>
+                        <h1 style="font-size:2.5rem; margin:8px 0;">${price:,.4f if price<1000 else :,.2f}</h1>
+                        
+                        <div class="{status}">{verdict}</div>
+                        
+                        <div style="margin-top:15px; background:#112233; padding:15px; border-radius:12px;">
+                            <b>Suggestion:</b> {suggestion}<br><br>
+                            <b>Target:</b> ${target:,.4f} | Confidence: {min(97, int(48 + abs(chg)*3.5 + vol/12000000))}%
+                        </div>
+                    </div>
+                    """)
         
-        # OMNI Calculations
-        entry = p * 0.985
-        target = p * 1.15
-
-        st.html(f"""
-        <div class="sat-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="height: 12px; width: 12px; background: {'#00ff9d' if is_bullish else '#ff4444'}; border-radius: 50%; box-shadow: 0 0 15px {'#00ff9d' if is_bullish else '#ff4444'};"></div>
-                    <b style="font-size: 1.6rem; color: #fff;">{sym}/USDT</b>
-                </div>
-                <b class="{'neon-green' if is_bullish else 'neon-red'}" style="font-size: 1.2rem;">{c24:+.2f}%</b>
-            </div>
-
-            <div style="font-size: 3rem; font-weight: 900; color: #fff; margin: 20px 0;">${format_p(p)}</div>
-
-            <div style="background: rgba(0, 242, 255, 0.05); border-left: 5px solid #00f2ff; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <div style="color: #8b949e; font-size: 0.75rem;">SATELLITE POSITION VERDICT</div>
-                <div style="color: #fff; font-weight: bold; margin-top: 5px; font-size: 1rem;">
-                    {'🚀 PURI ENTRY LENI HAI (STRONG BUY)' if is_bullish else '⚠️ WAIT FOR LIQUIDATION SWEEP'}
-                </div>
-                <div style="margin-top: 10px; font-size: 0.9rem;">
-                    <span style="color: #00ff9d;">ENTRY: ${format_p(entry)}</span> | 
-                    <span style="color: #00f2ff;">TARGET: ${format_p(target)}</span>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <a href="https://www.coinglass.com/currencies/{sym}" target="_blank" style="flex:1; text-align:center; padding: 10px; border-radius: 10px; background: #1e293b; color: #00f2ff; text-decoration: none; font-size: 0.75rem; font-weight: bold; border: 1px solid #00f2ff44;">ORDER FLOW</a>
-                <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{sym}USDT" target="_blank" style="flex:1; text-align:center; padding: 10px; border-radius: 10px; background: #1e293b; color: #00f2ff; text-decoration: none; font-size: 0.75rem; font-weight: bold; border: 1px solid #00f2ff44;">SMART CHART</a>
-            </div>
-        </div>
-        """)
-
-except Exception as e:
-    st.error("📡 SATELLITE SIGNAL LOST: Refreshing Node...")
-
-st.caption("Developed for Haseem Ali | Satellite-Pro V310 | Unstoppable Direct Link")
+        st.success(f"✅ Live Psychology Update: {datetime.now().strftime('%H:%M:%S')}")
+    
+    time.sleep(6)
