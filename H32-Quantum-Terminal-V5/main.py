@@ -1,68 +1,64 @@
 import streamlit as st
 import requests
-import pytz
-from datetime import datetime
+import pandas as pd
 
-# --- 🛰️ SATELLITE & GLOBAL SYNC ---
-st.set_page_config(page_title="V2100 OMNI", layout="centered")
+# --- 🛰️ SATELLITE CORE ---
+st.set_page_config(page_title="V5000 OMNI-LEARN", layout="wide")
+st.title("🛰️ V5000: SELF-LEARNING DATA TERMINAL")
 
-# --- 🕒 DELHI 12-HOUR SESSION TRACKER ---
-ist = pytz.timezone('Asia/Kolkata')
-now = datetime.now(ist)
-st.title("🛰️ V2100 WHALE COMMAND")
-st.write(f"**Session Time:** {now.strftime('%Y-%m-%d | %I:%M %p')}")
+# --- 🧠 3-BRAIN AI ENGINE ---
+def get_institutional_pipe(symbol):
+    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym=USD&limit=168"
+    res = requests.get(url).json()['Data']['Data']
+    return pd.DataFrame(res)
 
-# --- 🧠 200 IQ DECISION LOGIC ---
-def get_whale_flow():
-    try:
-        # Investing.com & Global Market Pipe Sync
-        url = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL&tsyms=USD"
-        res = requests.get(url).json()['RAW']
-        return res
-    except:
-        return None
+# Setup Session State for Learning
+if 'learning_log' not in st.session_state:
+    st.session_state.learning_log = []
 
-data = get_whale_flow()
+coins = ["BTC", "ETH", "SOL"]
 
-if data:
-    for sym in ["BTC", "ETH", "SOL"]:
-        price = data[sym]['USD']['PRICE']
-        vol = data[sym]['USD']['VOLUME24HOURTO']
-        low = data[sym]['USD']['LOW24HOUR']
-        high = data[sym]['USD']['HIGH24HOUR']
+for sym in coins:
+    df = get_institutional_pipe(sym)
+    curr_p = df['close'].iloc[-1]
+    
+    st.header(f"💎 {sym}/USDT | `${curr_p:,.2f}`")
+    
+    # --- 🏗️ 3-BRAIN ANALYSIS ---
+    b1, b2, b3 = st.columns(3)
 
-        # 🐋 WALLET TRACKER & LIQUIDITY ANALYSIS
-        # Puri Entry: Liquidity grab point niche hota hai
-        puri_entry = low * 0.998 
-        # Zed Zone: Retailer trap upar hota hai
-        zed_zone = high * 1.002
-        
-        # 🛡️ ANTI-FAKE (FIK MOT) LOGIC
-        # Agar price high ke paas hai par whale volume kam hai
-        is_trap = True if (price > high * 0.98 and vol < 100000000) else False
+    with b1:
+        st.info("🎯 **AI 1: BIT-NOTE (1H)**")
+        low_1h = df['low'].iloc[-1]
+        st.write(f"**Scalp Entry:** `${low_1h * 0.999:,.2f}`")
 
-        # --- 📱 SIMPLE CLEAN UI (No HTML Errors) ---
-        with st.container():
-            st.subheader(f"💎 {sym}/USDT")
-            
-            col1, col2 = st.columns(2)
-            col1.metric("LIVE PRICE", f"${price:,.2f}")
-            col2.error("RETAIL TRAP") if is_trap else col2.success("WHALE FLOW")
+    with b2:
+        st.success("🛰️ **AI 2: BIT-GLASS (12H)**")
+        low_12h = df['low'].tail(12).min()
+        st.write(f"**Puri Entry:** `${low_12h * 0.995:,.2f}`")
 
-            st.write(f"---")
-            
-            # 🎯 DECISION POINTS
-            c1, c2 = st.columns(2)
-            c1.warning(f"🔴 ZED ZONE (SELL)\n\n**${zed_zone:,.2f}**")
-            c2.info(f"🟢 PURI ENTRY (BUY)\n\n**${puri_entry:,.2f}**")
+    with b3:
+        st.warning("🏛️ **AI 3: BLACKROCK (1W)**")
+        low_1w = df['low'].min()
+        st.write(f"**Whale Floor:** `${low_1w * 0.98:,.2f}`")
 
-            # 🧠 SYSTEM VERDICT
-            st.info(f"""
-            **INSTITUTIONAL ANALYSIS:**
-            Delhi 12-hour cycle ke mutabiq, BlackRock aur bade whales **${puri_entry:,.2f}** par liquidity grab ka wait kar rahe hain. Upar **Zed Zone** par retailers 
-            trap ho rahe hain. Jab tak price niche wick na maare, entry mat lena.
-            """)
-            st.write("---")
+    # --- 🐋 WALLET TRACKER ---
+    vol_spike = df['volumeto'].iloc[-1] > (df['volumeto'].tail(24).mean() * 1.5)
+    if vol_spike:
+        st.button(f"🐋 WHALE INFLOW DETECTED: {sym}", key=f"btn_{sym}")
+    
+    # --- 🛠️ THE "ERROR CORRECTION" OPTION ---
+    st.markdown("---")
+    with st.expander(f"⚠️ Report Error / Teach AI for {sym}"):
+        reason = st.text_input("Galti kya hai? (e.g. False Breakout, Late Entry)", key=f"in_{sym}")
+        if st.button("Submit Correction & Learn", key=f"corr_{sym}"):
+            st.session_state.learning_log.append({"coin": sym, "price": curr_p, "error": reason})
+            st.write("✅ **AI Learning:** Galti record ho gayi hai. Next cycle mein is level ko adjust kiya jayega.")
 
-else:
-    st.error("📡 CONNECTION FAILED. Update your requirements.txt!")
+    st.divider()
+
+# --- 📊 MASTER LOG (AI'S DATABASE) ---
+if st.session_state.learning_log:
+    st.sidebar.subheader("🧠 AI Knowledge Base")
+    st.sidebar.write("System in galtiyon se seekh raha hai:")
+    st.sidebar.json(st.session_state.learning_log)
