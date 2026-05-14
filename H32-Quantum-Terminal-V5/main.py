@@ -20,7 +20,7 @@ fetcher = DataFetcher()
 smc = SMCEngine()
 ai = AIAnalyst()
 
-# Market Scanner
+# Scanner
 st.subheader("📡 Live Market Scanner")
 coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
 results = []
@@ -28,9 +28,8 @@ results = []
 for coin in coins:
     df = fetcher.get_ohlcv(coin, selected_tf, 150)
     if df is not None:
-        df = smc.get_indicators(df)
-        obs = smc.detect_order_blocks(df)
-        analysis = ai.analyze(df, obs)
+        df = smc.get_indicators(df)          # yahan pandas_ta nahi use hoga
+        analysis = ai.analyze(df, [])
         
         results.append({
             "Coin": coin.replace("USDT", ""),
@@ -39,23 +38,15 @@ for coin in coins:
             "Confidence": f"{analysis['confidence']}%"
         })
 
-st.dataframe(pd.DataFrame(results), use_container_width=True, height=400)
-
-# Signals
-st.subheader("🚨 Active Signals")
-for r in results:
-    if "STRONG BUY" in r["Signal"]:
-        st.success(f"**{r['Coin']}** → {r['Signal']} ({r['Confidence']})")
+st.dataframe(pd.DataFrame(results), use_container_width=True)
 
 # Chart
 st.subheader("📈 BTCUSDT Live Chart")
 df_btc = fetcher.get_ohlcv("BTCUSDT", selected_tf, 300)
 if df_btc is not None:
-    df_btc = smc.get_indicators(df_btc)
     fig = go.Figure(data=[go.Candlestick(x=df_btc['time'],
                     open=df_btc['open'], high=df_btc['high'],
                     low=df_btc['low'], close=df_btc['close'])])
-    fig.add_trace(go.Scatter(x=df_btc['time'], y=df_btc['EMA21'], name="EMA 21"))
     st.plotly_chart(fig, use_container_width=True)
 
 st.caption(f"Last Updated: {datetime.now().strftime('%I:%M %p')}")
