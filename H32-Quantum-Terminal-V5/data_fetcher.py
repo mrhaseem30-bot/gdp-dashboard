@@ -13,6 +13,5 @@ class DataFetcher:
             df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             df['time'] = pd.to_datetime(df['timestamp'], unit='ms')
             return df[['time', 'open', 'high', 'low', 'close', 'volume']]
-        except Exception as e:
-            print(f"Error in {symbol}: {e}")
+        except:
             return None
