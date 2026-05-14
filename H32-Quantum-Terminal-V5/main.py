@@ -2,25 +2,23 @@ import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 from datetime import datetime
-import os
 
 # --- 🛰️ ALADDIN CORE SETUP ---
-st.set_page_config(page_title="ALADDIN OMNI V17", layout="wide")
+st.set_page_config(page_title="ALADDIN OMNI V18", layout="wide")
 
 # --- 🔑 SECURE TELEGRAM CREDENTIALS ---
-# Yahan apna real Telegram Bot Token dalein jo BotFather se mila hai
-TELEGRAM_BOT_TOKEN = "7185493815:AAH_ActualBotTokenGoesHere"  # <-- Apni actual bot string yahan dalein
-TELEGRAM_CHAT_ID = "8376377797"  # Aapki verified ID
+TELEGRAM_BOT_TOKEN = "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"
+TELEGRAM_CHAT_ID = "8376377797"
 
-# --- 🎨 INJECTING YOUR CUSTOM CSS + TERMINAL EXTENSIONS ---
+# --- 🎨 SOLID DARK THEME (NO GRADIENT) + CUSTOM HOVER SYSTEM ---
 st.markdown("""
     <style>
-    /* Aapka uploaded style.css customization background grid */
-    .stApp { background: linear-gradient(135deg, #0a0e17, #11151f); }
-    .big-signal { padding: 25px; border-radius: 20px; text-align: center; font-size: 1.8rem; font-weight: bold; }
+    /* Gradient ko khatam karke solid institutional black background lagaya hai */
+    .stApp { background-color: #06090f !important; }
     
-    /* Aladdin Engine Extra Containers */
+    .big-signal { padding: 25px; border-radius: 20px; text-align: center; font-size: 1.8rem; font-weight: bold; }
     .main { color: #f0f6fc; font-family: 'Inter', sans-serif; }
     .terminal-card { background-color: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
     .buy-glow { border: 2px solid #00ff88; background-color: #041910; color: #00ff88; padding: 20px; border-radius: 12px; }
@@ -44,7 +42,10 @@ def fetch_live_market_candles(symbol, timeframe, limit):
         url = f"https://min-api.cryptocompare.com/data/v2/{endpoint}?fsym={symbol}&tsym=USD&limit={limit}"
         res = requests.get(url).json()
         if res.get("Response") == "Success":
-            return pd.DataFrame(res['Data']['Data'])
+            df = pd.DataFrame(res['Data']['Data'])
+            # Formatting timestamp for standard institutional candlestick charting
+            df['date'] = pd.to_datetime(df['time'], unit='s')
+            return df
         return None
     except:
         return None
@@ -88,12 +89,12 @@ def analyze_3_brain_matrix(df):
 st.sidebar.markdown("### 🏛️ ALADDIN CONTROL COCKPIT")
 
 if st.sidebar.button("🔌 Initial Setup & Bot Test"):
-    send_telegram_notification("🏛️ *ALADDIN MATRIX V17 STATUS:*\nSystem online! Custom CSS & 3-Brain Pipelines synced successfully with terminal portfolio accounts. 🛰️")
+    send_telegram_notification("🏛️ *ALADDIN MATRIX V18 STATUS:*\nSystem online! Candlestick Engine & Solid theme synced. 🛰️")
     st.sidebar.success("Test alert successfully fired to Telegram chat!")
 
 st.sidebar.divider()
 
-# Dropdown Account List (Pre-defined watchlist - No Search Required)
+# Dropdown Watchlist Panel
 watchlist_panel = ["BTC", "ETH", "SOL", "LINK", "DOT", "SHIB", "BONE", "BNB", "XRP", "MATIC"]
 selected_asset = st.sidebar.selectbox("📂 PORTFOLIO ACCOUNT ASSET", watchlist_panel)
 
@@ -126,15 +127,13 @@ if selected_asset:
         with col_c:
             st.markdown(f"<div class='terminal-card'><h4>🏛️ AI 3: BLACKROCK (1W)</h4><p style='font-size:18px;'><b>{results['ai3']}</b></p></div>", unsafe_allow_html=True)
 
-        # Trigger logic using session state trackers for telegram push loops
         if "last_broadcast_state" not in st.session_state:
             st.session_state.last_broadcast_state = ""
 
         current_state_key = f"{selected_asset}_{results['signal']}_{active_conf['tf']}"
-
         st.write(" ")
         
-        # Dynamic Signal Output Box with your custom .big-signal structure
+        # Dynamic Signal Output Box
         if "BUY" in results['signal']:
             st.markdown(f"""
                 <div class='big-signal buy-glow'>
@@ -144,7 +143,7 @@ if selected_asset:
             """, unsafe_allow_html=True)
             
             if st.session_state.last_broadcast_state != current_state_key:
-                tg_alert = f"🚨 *ALADDIN INTER-LINK BUY SYSTEM ALERT* 🚨\n\nAsset: {selected_asset}/USDT\nVerdict: 🟢 PURI ENTRY CONFIRMED\nPrice: ${results['price']:,.2f}\n\nAll three AI modules have matched technical parameters!"
+                tg_alert = f"🚨 *ALADDIN BUY ALERT* 🚨\n\nAsset: {selected_asset}/USDT\nVerdict: 🟢 PURI ENTRY\nPrice: ${results['price']:,.2f}"
                 send_telegram_notification(tg_alert)
                 st.session_state.last_broadcast_state = current_state_key
 
@@ -157,16 +156,38 @@ if selected_asset:
             """, unsafe_allow_html=True)
             
             if st.session_state.last_broadcast_state != current_state_key:
-                tg_alert = f"🚨 *ALADDIN INTER-LINK SELL SYSTEM ALERT* 🚨\n\nAsset: {selected_asset}/USDT\nVerdict: 🔴 URGENT ZED ZONE EXIT\nPrice: ${results['price']:,.2f}\n\nWarning: Distribution layer or resistance trap verified!"
+                tg_alert = f"🚨 *ALADDIN SELL ALERT* 🚨\n\nAsset: {selected_asset}/USDT\nVerdict: 🔴 URGENT ZED EXIT\nPrice: ${results['price']:,.2f}"
                 send_telegram_notification(tg_alert)
                 st.session_state.last_broadcast_state = current_state_key
         else:
             st.info(f"🛰️ POSITION VERDICT: {results['signal']} — Waiting for 3-brain multi-layered consensus.")
 
-        # Ingesting Price Chart Section
+        # --- 📊 ADVANCED REAL-TIME CANDLESTICK CHART CONTAINER ---
         st.write("---")
-        st.subheader("📈 REAL-TIME INSTITUTIONAL PRICE SPREAD")
-        st.line_chart(data_stream.set_index('time')['close'])
+        st.subheader("📊 REAL-TIME INSTITUTIONAL CANDLESTICK GRAPH")
+        
+        # Plotly Green/Red Candle Configuration Matrix
+        fig = go.Figure(data=[go.Candlestick(
+            x=data_stream['date'],
+            open=data_stream['open'],
+            high=data_stream['high'],
+            low=data_stream['low'],
+            close=data_stream['close'],
+            increasing_line_color='#00ff88', # Institutional Green Candle
+            decreasing_line_color='#ff4b4b'  # Institutional Red Candle
+        )])
+
+        fig.update_layout(
+            template="plotly_dark",
+            xaxis_rangeslider_visible=False,
+            paper_bgcolor='#0d1117',
+            plot_bgcolor='#0d1117',
+            margin=dict(l=10, r=10, t=10, b=10),
+            yaxis=dict(gridcolor='#1f242c', title="Price ($)"),
+            xaxis=dict(gridcolor='#1f242c')
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
 
     else:
         st.error("📡 Live server engine database connection timeout.")
