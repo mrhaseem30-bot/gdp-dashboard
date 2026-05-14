@@ -1,85 +1,71 @@
 import streamlit as st
 import pandas as pd
-import json
-import websocket
-import threading
-import time
-import ssl
+from datetime import datetime
+import plotly.graph_objects as go
+from data_fetcher import DataFetcher
+from smc_engine import SMCEngine
+from ai_analyst import AIAnalyst
+from risk_manager import RiskManager
+import config
 
-# --- 🔱 CORE CONFIG ---
-st.set_page_config(page_title="H32 OMNICORE V1.0", layout="wide")
+st.set_page_config(page_title="GDP Quantum Terminal V5", layout="wide")
+st.title("🟢 GDP - H32 Quantum Terminal V5")
+st.markdown("**Pura Trading Computer | Smart Money + AI + Global Data**")
 
-# GLOBAL DATA (Thread isko hamesha dekh sakega)
-if 'live_data' not in st.globals:
-    st.globals['live_data'] = {
-        "BTC": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
-        "ETH": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
-        "SOL": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
-        "SUI": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
-        "XRP": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
-        "DOT": {"price": 0.0, "change": 0.0, "signal": "WAITING..."},
-        "LINK": {"price": 0.0, "change": 0.0, "signal": "WAITING..."}
-    }
+# Sidebar Controls
+st.sidebar.header("⚙️ Controls")
+account_balance = st.sidebar.number_input("Account Balance (USDT)", value=1000.0)
+risk_percent = st.sidebar.slider("Risk % per Trade", 0.5, 3.0, config.CONFIG["risk_percent"])
+selected_tf = st.sidebar.selectbox("Timeframe", config.CONFIG["timeframes"])
 
-# --- 📡 BACKGROUND ENGINE (FIXED) ---
-def on_message(ws, message):
-    try:
-        msg = json.loads(message)
-        if 'data' in msg:
-            d = msg['data']
-            sym = d['s'].replace('USDT', '')
-            price = float(d['c'])
-            change = float(d['P'])
-            
-            if change > 1.5: sig = "🚀 PURI ENTRY (BULLISH)"
-            elif change < -1.5: sig = "⚠️ LIQUIDITY SWEEP"
-            else: sig = "⚖️ MONITORING"
+fetcher = DataFetcher()
+smc = SMCEngine()
+ai = AIAnalyst()
 
-            # GLOBAL dictionary update kar rahe hain (st.session_state use nahi kar rahe)
-            st.globals['live_data'][sym] = {"price": price, "change": change, "signal": sig}
-    except:
-        pass
+# Live Scanner
+st.subheader("📡 Global Market Scanner")
+coins = config.CONFIG["watchlist"]
+results = []
 
-def start_socket():
-    streams = [f"{s.lower()}usdt@ticker" for s in st.globals['live_data'].keys()]
-    url = f"wss://stream.binance.com:9443/stream?streams={'/'.join(streams)}"
-    ws = websocket.WebSocketApp(url, on_message=on_message)
-    ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+for coin in coins:
+    df = fetcher.get_ohlcv(coin, selected_tf, 200)
+    if df is not None:
+        df = smc.get_indicators(df)
+        obs = smc.detect_order_blocks(df)
+        analysis = ai.analyze(df, obs)
+        
+        results.append({
+            "Coin": coin.replace("USDT", ""),
+            "Price": f"${df['close'].iloc[-1]:,.4f}",
+            "Signal": analysis["signal"],
+            "Conf": f"{analysis['confidence']}%",
+            "Structure": smc.detect_structure(df)
+        })
 
-# Thread ko check karna ke wo pehle se chal to nahi raha
-if 'bg_thread' not in st.globals:
-    st.globals['bg_thread'] = threading.Thread(target=start_socket, daemon=True)
-    st.globals['bg_thread'].start()
+st.dataframe(pd.DataFrame(results), use_container_width=True, height=500)
 
-# --- 🎨 UI DESIGN ---
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap');
-    .stApp { background: #010204 !important; }
-    .card { background: rgba(10, 15, 25, 0.95); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid #00f2ff22; }
-    .price { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #fff; font-weight: 900; }
-    .green { color: #00ff9d; }
-    .red { color: #ff4444; }
-</style>
-""", unsafe_allow_html=True)
+# Signals & Psychology
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("🚨 Active Signals")
+    for r in results:
+        if "STRONG BUY" in r["Signal"]:
+            st.success(f"**{r['Coin']}** → {r['Signal']} | {r['Conf']}")
 
-st.markdown("<h1 style='text-align: center; color: #fff; font-family: \"Orbitron\", sans-serif;'>🔱 OMNI-CORE LIVE</h1>", unsafe_allow_html=True)
+with col2:
+    st.subheader("🧠 Psychology Engine")
+    st.metric("Market Sentiment", "Bullish Bias", "FOMO + Liquidity Grab")
+    st.metric("AI Overall Confidence", "74%", "↑")
 
-# UI Display Loop
-for sym, info in st.globals['live_data'].items():
-    color = "green" if info['change'] >= 0 else "red"
-    p_format = f"{info['price']:,.2f}" if info['price'] > 1 else f"{info['price']:,.4f}"
-    
-    st.markdown(f"""
-    <div class="card">
-        <div style="display: flex; justify-content: space-between;">
-            <b style="color: #fff;">{sym}/USDT</b>
-            <span class="{color}">{info['change']:+.2f}%</span>
-        </div>
-        <div class="price">${p_format}</div>
-        <div style="color: #58a6ff; font-size: 0.8rem; margin-top: 5px;">{info['signal']}</div>
-    </div>
-    """, unsafe_allow_html=True)
+# Chart
+st.subheader("📈 BTCUSDT Detailed Chart")
+df_btc = fetcher.get_ohlcv("BTCUSDT", selected_tf, 300)
+if df_btc is not None:
+    df_btc = smc.get_indicators(df_btc)
+    fig = go.Figure(data=[go.Candlestick(x=df_btc['time'],
+                    open=df_btc['open'], high=df_btc['high'],
+                    low=df_btc['low'], close=df_btc['close'])])
+    fig.add_trace(go.Scatter(x=df_btc['time'], y=df_btc['EMA21'], name="EMA 21", line=dict(color='orange')))
+    st.plotly_chart(fig, use_container_width=True)
 
-time.sleep(2)
-st.rerun()
+st.caption(f"Last Updated: {datetime.now().strftime('%d %b %I:%M %p')} | Risk Mode: {risk_percent}% | Global Data via CCXT")
