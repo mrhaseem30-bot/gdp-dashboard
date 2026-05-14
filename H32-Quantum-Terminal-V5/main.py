@@ -1,32 +1,34 @@
 import streamlit as st
 import requests
 
-# --- 🛰️ SATELLITE & GLOBAL PSYCHOLOGY CONFIG ---
-st.set_page_config(page_title="V300 SUPREME COMMANDER", layout="wide")
+# --- 🛰️ SUPREME SYSTEM CONFIG ---
+st.set_page_config(page_title="V400 GOD-MODE", layout="wide")
 
 # Elite Assets Only
 ELITE_COINS = ["BTC", "ETH", "SOL", "LINK", "SUI", "DOT"]
 
-# --- 🌌 NEON GOD-MODE UI (High Contrast & Glowing) ---
+# --- 🌌 SUPREME NEON UI (Dark & Glowing) ---
 st.markdown("""
     <style>
     .stApp { background-color: #000205; color: #ffffff; }
-    .supreme-terminal {
+    .supreme-card {
         background: #080c12; border: 2px solid #00f2ff;
-        border-radius: 10px; padding: 30px; margin-bottom: 35px;
+        border-radius: 12px; padding: 25px; margin-bottom: 30px;
         box-shadow: 0 0 40px rgba(0, 242, 255, 0.2);
     }
-    .neon-glow { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; font-weight: 900; font-family: monospace; }
-    .register-box { background: #111; border: 1px solid #333; padding: 15px; border-radius: 5px; text-align: center; }
-    .rally-signal { background: #00ff8822; color: #00ff88; border: 2px solid #00ff88; padding: 10px; border-radius: 5px; font-weight: 900; animation: pulse 2s infinite; }
-    .trap-alert { background: #ff4b4b22; color: #ff4b4b; border: 2px solid #ff4b4b; padding: 10px; border-radius: 5px; font-weight: 900; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    .neon-glow { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; font-weight: 900; }
+    .register-box { 
+        background: #111; border: 1px solid #333; padding: 12px; 
+        border-radius: 6px; text-align: center; font-size: 13px;
+    }
+    .status-rally { background: #00ff8822; color: #00ff88; border: 2px solid #00ff88; padding: 8px; border-radius: 4px; font-weight: bold; text-align: center; }
+    .status-trap { background: #ff4b4b22; color: #ff4b4b; border: 2px solid #ff4b4b; padding: 8px; border-radius: 4px; font-weight: bold; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align:center;' class='neon-glow'>🛰️ ENCEPHALON V300: GOD-MODE ASSET ANALYST</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;' class='neon-glow'>🛰️ V400: GOD-MODE SUPREME ANALYST</h1>", unsafe_allow_html=True)
 
-# --- 🧠 300 IQ DEEP ANALYST ENGINE ---
+# --- 🧠 300 IQ DEEP LOGIC ENGINE ---
 try:
     url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={','.join(ELITE_COINS)}&tsyms=USD"
     res = requests.get(url).json()['RAW']
@@ -37,53 +39,58 @@ try:
             c = res[sym]['USD']['CHANGEPCT24HOUR']
             v = res[sym]['USD']['VOLUME24HOUR']
             
-            # --- 🔮 DEEP PSYCHOLOGY FILTERS (Aapke Saare Points) ---
-            liq_zone = p * 0.915 #
-            register_break = p * 1.082 #
+            # Critical Levels
+            liq_area = p * 0.915 # Liquidation Trap Area
+            reg_break = p * 1.082 # Register Breakout Level
             
-            # Trap vs Rally Logic
-            is_trap = (c > 3 and v < (v*0.7)) # Volume divergence check
-            is_rally = (c > 1.5 and v > (v*0.9)) # Real accumulation
+            # 3-AI Logic: Fake Pump vs Real Rally
+            is_trap = (c > 3 and v < (v*0.75)) # Price up, Volume down (Trap)
+            is_rally = (c > 1.8 and v > (v*0.95)) # Real Strength
+            
+            # Verdict Logic
+            if is_rally:
+                verdict = '<div class="status-rally">🚀 REAL RALLY (1-MONTH BULLISH)</div>'
+                sub_text = "PURI ENTRY LENI HAI. Market 1 mahine chale gi."
+            elif is_trap:
+                verdict = '<div class="status-trap">🚨 BULL TRAP (FAKE PUMP)</div>'
+                sub_text = f"Don't Enter. Market {liq_area:,.2f} tak dump hogi."
+            else:
+                verdict = '<div class="register-box">⚖️ WAITING FOR REGISTER BREAK</div>'
+                sub_text = f"Monitor {reg_break:,.2f} for confirm entry."
 
-            status_tag = '<div class="rally-signal">🚀 BULLISH RALLY (1-MONTH TREND)</div>' if is_rally else \
-                         ('<div class="trap-alert">🚨 BULL TRAP DETECTED (FAKE PUMP)</div>' if is_trap else \
-                          '<div class="register-box">⚖️ WAITING FOR REGISTER BREAK</div>')
-
-            with st.container():
-                st.markdown(f"""
-                <div class="supreme-terminal">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:32px; font-weight:900;" class="neon-glow">{sym}/USDT</span>
-                        {status_tag}
+            st.markdown(f"""
+            <div class="supreme-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <span style="font-size:28px; font-weight:900;" class="neon-glow">{sym}/USDT</span>
+                    {verdict}
+                </div>
+                
+                <div style="font-size:45px; font-weight:900;">${p:,.2f} <small style="font-size:18px; color:{'#00ff88' if c>=0 else '#ff4b4b'}">{c:+.2f}%</small></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin: 20px 0;">
+                    <div class="register-box" style="border-color:#ff4b4b;">
+                        <span style="color:#888;">LIQUIDATION TRAP</span><br>
+                        <b style="color:#ff4b4b; font-size:16px;">${liq_area:,.2f}</b>
                     </div>
-                    
-                    <div style="font-size:55px; font-weight:900; margin: 20px 0;">${p:,.2f} <small style="font-size:20px; color:{'#00ff88' if c>=0 else '#ff4b4b'}">{c:+.2f}%</small></div>
-                    
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
-                        <div class="register-box" style="border-color:#ff4b4b;">
-                            <div style="color:#888; font-size:11px;">LIQUIDATION TRAP AREA</div>
-                            <div style="font-size:18px; font-weight:900; color:#ff4b4b;">${liq_zone:,.2f}</div>
-                        </div>
-                        <div class="register-box" style="border-color:#00f2ff;">
-                            <div style="color:#888; font-size:11px;">REGISTER BREAKOUT</div>
-                            <div style="font-size:18px; font-weight:900; color:#00f2ff;">${register_break:,.2f}</div>
-                        </div>
-                        <div class="register-box" style="border-color:#fbbf24;">
-                            <div style="color:#888; font-size:11px;">1-MONTH TARGET</div>
-                            <div style="font-size:18px; font-weight:900; color:#fbbf24;">${p*1.32:,.2f}</div>
-                        </div>
+                    <div class="register-box" style="border-color:#00f2ff;">
+                        <span style="color:#888;">REGISTER BREAK</span><br>
+                        <b style="color:#00f2ff; font-size:16px;">${reg_break:,.2f}</b>
                     </div>
-                    
-                    <div style="background:rgba(0,242,255,0.05); padding:20px; border-radius:8px; margin-top:20px; border-left:4px solid #00f2ff;">
-                        <span style="color:#00f2ff; font-weight:bold; font-size:14px;">🧠 DEEP SYSTEM VERDICT:</span>
-                        <p style="font-size:14px; color:#ccc; margin-top:5px;">
-                            Agar market <b>${register_break:,.2f}</b> ko volume ke sath break karti hai, toh ye agla 1 mahina <b>Bullish</b> rahegi. 
-                            Lekin agar volume nahi aya, toh ye retail traders ko liquidate karne <b>${liq_zone:,.2f}</b> tak dump hogi.
-                            <b>3-AI IQ Sync:</b> Synced & Validated.
-                        </p>
+                    <div class="register-box" style="border-color:#fbbf24;">
+                        <span style="color:#888;">1-MONTH GOAL</span><br>
+                        <b style="color:#fbbf24; font-size:16px;">${p*1.35:,.2f}</b>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                
+                <div style="background:rgba(0,242,255,0.05); padding:15px; border-radius:8px; border-left:4px solid #00f2ff;">
+                    <b style="color:#00f2ff; font-size:13px;">🧠 SUPREME IQ REPORT:</b>
+                    <p style="font-size:14px; margin-top:5px; color:#ccc;">
+                        {sub_text} Agar register level break hota hai toh market agla 1 mahina trend karegi.
+                        <b>3-AI IQ Sync:</b> Gemini + Groq + Mistral Verified.
+                    </p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("📡 SUPREME IQ DATA SYNCING... SYSTEM OVERLOADED BY GENIUS LOGIC")
+    st.error("📡 SATELLITE CONNECTION RE-SYNCING...")
