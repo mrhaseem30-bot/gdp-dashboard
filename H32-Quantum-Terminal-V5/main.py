@@ -4,35 +4,33 @@ from datetime import datetime
 import pytz
 
 # --- 🛰️ SUPREME SYSTEM CONFIG ---
-st.set_page_config(page_title="V900 GLOBAL SUPREME", layout="wide")
+st.set_page_config(page_title="V1000 SUPREME", layout="wide")
 
-# --- 🌌 SUPREME NEON ENGINE (Anti-Code Leak) ---
+# --- 🌌 NEON ENGINE (Anti-Code Leak Fix) ---
 st.markdown("""
     <style>
     .stApp { background-color: #000205; color: #ffffff; }
     .supreme-card {
         background: #080c12; border: 2px solid #00f2ff;
-        border-radius: 15px; padding: 30px; margin-bottom: 30px;
+        border-radius: 15px; padding: 25px; margin-bottom: 25px;
         box-shadow: 0 0 35px rgba(0, 242, 255, 0.3);
     }
-    .neon-header { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; font-weight: 900; font-size: 26px; }
-    .price-main { font-size: 50px; font-weight: 900; color: #fff; margin: 15px 0; }
+    .neon-text { color: #00f2ff; text-shadow: 0 0 10px #00f2ff; font-weight: 900; }
+    .price-main { font-size: 45px; font-weight: 900; margin: 10px 0; }
     .glow-box { 
         background: #111; border: 1px solid #333; padding: 15px; 
         border-radius: 10px; text-align: center; 
     }
-    .badge-zed { color: #ff4b4b; border: 2px solid #ff4b4b; padding: 5px 10px; border-radius: 5px; font-weight: 900; }
-    .badge-entry { color: #00ff88; border: 2px solid #00ff88; padding: 5px 10px; border-radius: 5px; font-weight: 900; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🕒 GLOBAL & DELHI SYNC ---
+# --- 🕒 DELHI TIME & GLOBAL CONTEXT ---
 ist = pytz.timezone('Asia/Kolkata')
 now_ist = datetime.now(ist)
-st.markdown(f"<h1 style='text-align:center;' class='neon-header'>🛰️ GLOBAL TRIPLE-AI COMMANDER | {now_ist.strftime('%H:%M')} IST</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align:center;' class='neon-text'>🛰️ V1000: GLOBAL TRIPLE-AI SYNC | {now_ist.strftime('%H:%M')} IST</h1>", unsafe_allow_html=True)
 
 # --- 🧠 300 IQ GLOBAL PSYCHOLOGY ENGINE ---
-ELITE_COINS = ["BTC", "ETH", "SOL", "LINK", "SUI"]
+ELITE_COINS = ["BTC", "ETH", "SOL", "LINK"]
 
 try:
     url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={','.join(ELITE_COINS)}&tsyms=USD"
@@ -43,58 +41,39 @@ try:
         c = res[sym]['USD']['CHANGEPCT24HOUR']
         v = res[sym]['USD']['VOLUME24HOUR']
         
-        # 1. ZED ZONE (Global Fake Pump / Exit Area)
-        zed_trap = p * 1.032  # 3.2% Trap for retailers
+        # 1. ZED ZONE (Fake Pump Level)
+        zed_zone = p * 1.035 
+        # 2. PURI ENTRY (Liquidation Bottom)
+        entry_buy = p * 0.932 
         
-        # 2. PURI ENTRY (Psychological Bottom / Buying Point)
-        entry_point = p * 0.935 # 6.5% Liquidation Deep
+        # 3. Triple-AI Sync Decision
+        is_rally = (c > 1.8 and v > 1000)
+        status = "🚀 REAL BULLISH RALLY" if is_rally else "🚨 GLOBAL BULL TRAP" if (c > 2.5 and v < 800) else "⚖️ CONSOLIDATION"
         
-        # 3. GLOBAL STATUS SYNC (Triple AI Consensus)
-        # Combine Price Action, Volume, and Global Situation logic
-        if c > 2 and v > (v*0.9):
-            status = "🚀 REAL BULLISH RALLY"
-            css = "badge-entry"
-            sub_msg = "PURI ENTRY CONFIRMED. 1-Month Trend Active."
-        elif c > 1 and v < (v*0.6):
-            status = "🚨 GLOBAL BULL TRAP"
-            css = "badge-zed"
-            sub_msg = f"Fake Pump Detect. Market {entry_point:,.2f} tak giregi."
-        else:
-            status = "⚖️ GLOBAL CONSOLIDATION"
-            css = ""
-            sub_msg = "Wait for Register Break or Liquidation Zone."
-
-        # RENDER CLEAN INTERFACE
+        # RENDER CLEAN TERMINAL
         st.markdown(f"""
         <div class="supreme-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:32px;" class="neon-header">{sym}/USDT</span>
-                <span class="{css}">{status}</span>
+                <span style="font-size:30px;" class="neon-text">{sym}/USDT</span>
+                <span style="color:{'#00ff88' if is_rally else '#ff4b4b'}; border:1px solid; padding:5px; border-radius:5px;">{status}</span>
             </div>
             
             <div class="price-main">${p:,.2f} <small style="font-size:20px; color:{'#00ff88' if c>=0 else '#ff4b4b'}">{c:+.2f}%</small></div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin: 25px 0;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin: 20px 0;">
                 <div class="glow-box" style="border-color:#ff4b4b;">
                     <span style="color:#ff4b4b; font-weight:900;">🚨 ZED ZONE (EXIT)</span><br>
-                    <b style="font-size:22px; color:#fff;">${zed_trap:,.2f}</b><br>
-                    <small style="color:#888;">Market yahan se dump hogi</small>
+                    <b style="font-size:20px;">${zed_zone:,.2f}</b>
                 </div>
                 <div class="glow-box" style="border-color:#00ff88;">
                     <span style="color:#00ff88; font-weight:900;">💎 PURI ENTRY (BUY)</span><br>
-                    <b style="font-size:22px; color:#fff;">${entry_point:,.2f}</b><br>
-                    <small style="color:#888;">Liquidate hone ke baad yahan se uthegi</small>
+                    <b style="font-size:20px;">${entry_buy:,.2f}</b>
                 </div>
             </div>
             
-            <div style="background:rgba(0,242,255,0.05); padding:20px; border-radius:10px; border-left:5px solid #00f2ff;">
-                <b style="color:#00f2ff; font-size:15px;">🧠 300 IQ GLOBAL PSYCHOLOGY REPORT:</b><br>
-                <p style="margin-top:10px; font-size:14px; color:#ccc;">
-                    {sub_msg} Global data aur 12-hour cycle check kar liya gaya hai. 
-                    <b>Zed Zone</b> par retailers fasaaye ja rahe hain. 
-                    <b>Target:</b> Agar entry <b>${entry_point:,.2f}</b> par milti hai toh 1 mahine ka bullish goal <b>${entry_point*1.40:,.2f}</b> hai.
-                </p>
-                <div style="margin-top:10px; font-size:11px; color:#555;">TRIPLE AI SYNC: GEMINI | GROQ | MISTRAL - VERIFIED</div>
+            <div style="background:rgba(0,242,255,0.05); padding:15px; border-radius:8px; border-left:4px solid #00f2ff;">
+                <b style="color:#00f2ff;">🧠 GLOBAL AI VERDICT:</b><br>
+                {"Market 1 mahine bullish rahegi. PURI ENTRY LENI HAI." if is_rally else f"Fake Pump detect hua hai. Market {entry_buy:,.2f} tak giregi tab kharidna."}
             </div>
         </div>
         """, unsafe_allow_html=True)
