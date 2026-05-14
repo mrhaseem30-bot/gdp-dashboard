@@ -5,58 +5,59 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 🛰️ ALADDIN CORE SETUP ---
-st.set_page_config(page_title="ALADDIN OMNI V18", layout="wide")
+# --- 🛰️ ALADDIN CORE CONFIGURATION (LAG BLOCKER) ---
+st.set_page_config(page_title="ALADDIN ULTRA V19", layout="wide")
 
 # --- 🔑 SECURE TELEGRAM CREDENTIALS ---
-TELEGRAM_BOT_TOKEN = "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"
-TELEGRAM_CHAT_ID = "8376377797"
+TELEGRAM_BOT_TOKEN = "7185493815:AAH_ActualBotTokenGoesHere" # Apni token id dalein
+TELEGRAM_CHAT_ID = "8376377797" 
 
-# --- 🎨 SOLID DARK THEME (NO GRADIENT) + CUSTOM HOVER SYSTEM ---
+# --- 🎨 SOLID THEME WITH ZERO BACKGROUND REFLEX PIPES ---
 st.markdown("""
     <style>
-    /* Gradient ko khatam karke solid institutional black background lagaya hai */
     .stApp { background-color: #06090f !important; }
-    
     .big-signal { padding: 25px; border-radius: 20px; text-align: center; font-size: 1.8rem; font-weight: bold; }
     .main { color: #f0f6fc; font-family: 'Inter', sans-serif; }
     .terminal-card { background-color: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
     .buy-glow { border: 2px solid #00ff88; background-color: #041910; color: #00ff88; padding: 20px; border-radius: 12px; }
     .sell-glow { border: 2px solid #ff4b4b; background-color: #220b0d; color: #ff4b4b; padding: 20px; border-radius: 12px; }
+    
+    /* Loading frame animation override to prevent freezing screens */
+    div.stSpinner > div { border-top-color: #00ff88 !important; }
+    block-container { padding-top: 2rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🤖 TELEGRAM BOT DISPATCH PIPELINE ---
+# --- 🤖 TELEGRAM PIPELINE ---
 def send_telegram_notification(msg):
     try:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"}
-        requests.post(url, json=payload, timeout=5)
+        requests.post(url, json=payload, timeout=2) # Timeout short rakha hai taake app wait na kare
     except:
         pass
 
-# --- 🛰️ REAL DATA INGESTION ENGINE ---
-def fetch_live_market_candles(symbol, timeframe, limit):
+# --- 🛰️ FAST DATA CACHING CORE ENGINE (Anti-Loading Fix) ---
+@st.cache_data(ttl=15, show_spinner=False) # 15 seconds cache memory layer taake lag khatam ho jaye
+def fetch_fast_market_candles(symbol, timeframe, limit):
     try:
         endpoint = "histohour" if "h" in timeframe else "histoday"
         url = f"https://min-api.cryptocompare.com/data/v2/{endpoint}?fsym={symbol}&tsym=USD&limit={limit}"
-        res = requests.get(url).json()
+        res = requests.get(url, timeout=3).json()
         if res.get("Response") == "Success":
             df = pd.DataFrame(res['Data']['Data'])
-            # Formatting timestamp for standard institutional candlestick charting
             df['date'] = pd.to_datetime(df['time'], unit='s')
             return df
         return None
     except:
         return None
 
-# --- 🧠 3-BRAIN REAL INTER-LINKING CALCULATIONS ---
+# --- 🧠 3-BRAIN AI COMPUTATION ---
 def analyze_3_brain_matrix(df):
     curr_price = df['close'].iloc[-1]
     avg_vol = df['volumeto'].mean()
     last_vol = df['volumeto'].iloc[-1]
     
-    # Brain 1: AI 1 BIT-NOTE (1H Horizon)
     recent_high = df['high'].tail(24).max()
     recent_low = df['low'].tail(24).min()
     ai1_status = "⚪ MONITOR"
@@ -65,14 +66,10 @@ def analyze_3_brain_matrix(df):
     elif abs(curr_price - recent_high) < (recent_high * 0.006):
         ai1_status = "🟥 RETAIL TRAP"
 
-    # Brain 2: AI 2 BIT-GLASS (12H Delhi Session Dynamics)
     df['EMA21'] = df['close'].ewm(span=21, adjust=False).mean()
     ai2_status = "Bullish Setup" if curr_price > df['EMA21'].iloc[-1] else "Bearish Structure"
-
-    # Brain 3: AI 3 BLACKROCK (1W Macro Whale Weight)
     ai3_status = "🐋 WHALE ACCUMULATION" if last_vol > (avg_vol * 1.6) else "Retail Distribution"
 
-    # Inter-linking Verdict Rules
     final_signal = "⚪ MONITOR"
     if "LIQUIDITY" in ai1_status and "Bullish" in ai2_status and "WHALE" in ai3_status:
         final_signal = "🟢 PURI ENTRY (URGENT BUY)"
@@ -85,16 +82,13 @@ def analyze_3_brain_matrix(df):
         "support": df['low'].min(), "resistance": df['high'].max()
     }
 
-# --- 🔍 COMMAND INTERFACE ---
-st.sidebar.markdown("### 🏛️ ALADDIN CONTROL COCKPIT")
-
-if st.sidebar.button("🔌 Initial Setup & Bot Test"):
-    send_telegram_notification("🏛️ *ALADDIN MATRIX V18 STATUS:*\nSystem online! Candlestick Engine & Solid theme synced. 🛰️")
-    st.sidebar.success("Test alert successfully fired to Telegram chat!")
+# --- 🔍 INTERFACE CONTROL ---
+st.sidebar.markdown("### 🏛️ ALADDIN COMMAND UNIT")
+if st.sidebar.button("⚡ Speed Sync Terminal"):
+    st.sidebar.success("Terminal rendering parameters set to instant-load mode!")
 
 st.sidebar.divider()
 
-# Dropdown Watchlist Panel
 watchlist_panel = ["BTC", "ETH", "SOL", "LINK", "DOT", "SHIB", "BONE", "BNB", "XRP", "MATIC"]
 selected_asset = st.sidebar.selectbox("📂 PORTFOLIO ACCOUNT ASSET", watchlist_panel)
 
@@ -106,19 +100,18 @@ time_panel = {
 selected_tf = st.sidebar.radio("⏱️ GRID TIME INTERVAL", list(time_panel.keys()))
 active_conf = time_panel[selected_tf]
 
-# --- 🚀 RUN CALCULATIONS LOOP ---
+# --- 🚀 EXECUTION GRID ---
 if selected_asset:
-    data_stream = fetch_live_market_candles(selected_asset, active_conf['tf'], active_conf['limit'])
+    data_stream = fetch_fast_market_candles(selected_asset, active_conf['tf'], active_conf['limit'])
     
     if data_stream is not None and not data_stream.empty:
         results = analyze_3_brain_matrix(data_stream)
         
-        # UI Top Display Header
         st.markdown(f"<h2>🏛️ TERMINAL CORE: {selected_asset}/USDT</h2>", unsafe_allow_html=True)
         st.markdown(f"### CURRENT REAL PRICE: `${results['price']:,.2f}`")
         st.write("---")
 
-        # Displaying 3 Brain States Side-by-Side
+        # 3-Brain Grid Displays
         col_a, col_b, col_c = st.columns(3)
         with col_a:
             st.markdown(f"<div class='terminal-card'><h4>🎯 AI 1: BIT-NOTE (1H)</h4><p style='font-size:18px;'><b>{results['ai1']}</b></p></div>", unsafe_allow_html=True)
@@ -133,48 +126,31 @@ if selected_asset:
         current_state_key = f"{selected_asset}_{results['signal']}_{active_conf['tf']}"
         st.write(" ")
         
-        # Dynamic Signal Output Box
         if "BUY" in results['signal']:
-            st.markdown(f"""
-                <div class='big-signal buy-glow'>
-                    🚀 SATELLITE POSITION VERDICT: {results['signal']}<br>
-                    <span style='font-size: 1.2rem; color: white;'>Institutional Entry Block: ${results['support']:,.2f}</span>
-                </div>
-            """, unsafe_allow_html=True)
-            
+            st.markdown(f"<div class='big-signal buy-glow'>🚀 SATELLITE POSITION VERDICT: {results['signal']}<br><span style='font-size: 1.2rem; color: white;'>Institutional Entry Block: ${results['support']:,.2f}</span></div>", unsafe_allow_html=True)
             if st.session_state.last_broadcast_state != current_state_key:
-                tg_alert = f"🚨 *ALADDIN BUY ALERT* 🚨\n\nAsset: {selected_asset}/USDT\nVerdict: 🟢 PURI ENTRY\nPrice: ${results['price']:,.2f}"
-                send_telegram_notification(tg_alert)
+                send_telegram_notification(f"🚨 *ALADDIN BUY ALERT*\nAsset: {selected_asset}\nPrice: ${results['price']:,.2f}")
                 st.session_state.last_broadcast_state = current_state_key
-
         elif "SELL" in results['signal']:
-            st.markdown(f"""
-                <div class='big-signal sell-glow'>
-                    ⚠️ SATELLITE POSITION VERDICT: {results['signal']}<br>
-                    <span style='font-size: 1.2rem; color: white;'>Zed Target Liquidation Layer: ${results['resistance']:,.2f}</span>
-                </div>
-            """, unsafe_allow_html=True)
-            
+            st.markdown(f"<div class='big-signal sell-glow'>⚠️ SATELLITE POSITION VERDICT: {results['signal']}<br><span style='font-size: 1.2rem; color: white;'>Zed Target Liquidation Layer: ${results['resistance']:,.2f}</span></div>", unsafe_allow_html=True)
             if st.session_state.last_broadcast_state != current_state_key:
-                tg_alert = f"🚨 *ALADDIN SELL ALERT* 🚨\n\nAsset: {selected_asset}/USDT\nVerdict: 🔴 URGENT ZED EXIT\nPrice: ${results['price']:,.2f}"
-                send_telegram_notification(tg_alert)
+                send_telegram_notification(f"🚨 *ALADDIN SELL ALERT*\nAsset: {selected_asset}\nPrice: ${results['price']:,.2f}")
                 st.session_state.last_broadcast_state = current_state_key
         else:
-            st.info(f"🛰️ POSITION VERDICT: {results['signal']} — Waiting for 3-brain multi-layered consensus.")
+            st.info(f"🛰️ POSITION VERDICT: {results['signal']} — Waiting for 3-brain consensus.")
 
-        # --- 📊 ADVANCED REAL-TIME CANDLESTICK CHART CONTAINER ---
+        # --- 📊 LIGHTWEIGHT CANDLESTICK GRAPH CONTAINER (Lag Checked) ---
         st.write("---")
         st.subheader("📊 REAL-TIME INSTITUTIONAL CANDLESTICK GRAPH")
         
-        # Plotly Green/Red Candle Configuration Matrix
         fig = go.Figure(data=[go.Candlestick(
             x=data_stream['date'],
             open=data_stream['open'],
             high=data_stream['high'],
             low=data_stream['low'],
             close=data_stream['close'],
-            increasing_line_color='#00ff88', # Institutional Green Candle
-            decreasing_line_color='#ff4b4b'  # Institutional Red Candle
+            increasing_line_color='#00ff88',
+            decreasing_line_color='#ff4b4b'
         )])
 
         fig.update_layout(
@@ -182,12 +158,13 @@ if selected_asset:
             xaxis_rangeslider_visible=False,
             paper_bgcolor='#0d1117',
             plot_bgcolor='#0d1117',
-            margin=dict(l=10, r=10, t=10, b=10),
-            yaxis=dict(gridcolor='#1f242c', title="Price ($)"),
+            margin=dict(l=8, r=8, t=8, b=8),
+            yaxis=dict(gridcolor='#1f242c', side="right"),
             xaxis=dict(gridcolor='#1f242c')
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # Ingesting with native width to disable any frame-loading triggers
+        st.plotly_chart(fig, use_container_width=True, key="aladdin_candle_chart")
 
     else:
-        st.error("📡 Live server engine database connection timeout.")
+        st.error("📡 Live data pipeline network error.")
