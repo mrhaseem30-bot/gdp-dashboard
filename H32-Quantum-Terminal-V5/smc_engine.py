@@ -1,65 +1,38 @@
 import pandas as pd
+import pandas_ta as ta
+import numpy as np
 
-def prepare_data(df):
-    df = df.copy()
-    if len(df) < 30:
+class SMCEngine:
+    def get_indicators(self, df):
+        df = df.copy()
+        df['EMA21'] = ta.ema(df['close'], 21)
+        df['EMA50'] = ta.ema(df['close'], 50)
+        df['RSI'] = ta.rsi(df['close'], 14)
+        df['ATR'] = ta.atr(df['high'], df['low'], df['close'], 14)
         return df
     
-    df['ema9'] = df['close'].ewm(span=9).mean()
-    df['ema21'] = df['close'].ewm(span=21).mean()
-    df['ema50'] = df['close'].ewm(span=50).mean()
-    df['ma20'] = df['close'].rolling(20).mean()
+    def detect_order_blocks(self, df):
+        df = df.copy()
+        swing = 5
+        df['swing_low'] = df['low'] == df['low'].rolling(swing*2+1, center=True).min()
+        df['swing_high'] = df['high'] == df['high'].rolling(swing*2+1, center=True).max()
+        
+        obs = []
+        for i in range(10, len(df)-5):
+            if df['swing_low'].iloc[i]:
+                obs.append({'type': 'Bullish OB', 'price': round(float(df['low'].iloc[i]), 4), 'time': df['time'].iloc[i]})
+            if df['swing_high'].iloc[i]:
+                obs.append({'type': 'Bearish OB', 'price': round(float(df['high'].iloc[i]), 4), 'time': df['time'].iloc[i]})
+        return obs[-5:]
     
-    # RSI
-    delta = df['close'].diff()
-    gain = delta.clip(lower=0).rolling(14).mean()
-    loss = abs(delta.clip(upper=0)).rolling(14).mean()
-    rs = gain / loss
-    df['rsi'] = 100 - (100 / (1 + rs))
-    return df
-
-def get_quantum_decision(df, symbol):
-    df = prepare_data(df)
-    price = float(df['close'].iloc[-1])
-    support = float(df['low'].rolling(8).min().iloc[-1])
-    resistance = float(df['high'].rolling(8).max().iloc[-1])
-    
-    score = 48
-    reasons = []
-    decision = "HOLD"
-    urgency = "Normal"
-    
-    if price > df['ema21'].iloc[-1] and price > df['ma20'].iloc[-1]:
-        score += 32
-        reasons.append("Bullish Structure + EMA Alignment")
-        decision = "BUY"
-        urgency = "High"
-    
-    if price < support * 1.006:
-        score += 28
-        reasons.append("Strong Support - Possible Accumulation")
-        decision = "STRONG BUY"
-        urgency = "High"
-    
-    if 'rsi' in df.columns:
-        if df['rsi'].iloc[-1] < 35:
-            reasons.append("RSI Oversold - Bounce Expected")
-    
-    if price < df['ema21'].iloc[-1]:
-        score -= 20
-        reasons.append("Bearish Pressure")
-        decision = "CAUTION / SELL"
-    
-    early_alert = f"Next 1-3 hours mein {decision} ka strong signal hai."
-    
-    return {
-        "coin": symbol,
-        "decision": decision,
-        "score": min(score, 100),
-        "price": round(price, 2),
-        "support": round(support, 2),
-        "resistance": round(resistance, 2),
-        "early_alert": early_alert,
-        "reasons": reasons,
-        "urgency": urgency
-    }
+    def detect_structure(self, df):
+        recent_high = df['high'].tail(30).max()
+        recent_low = df['low'].tail(30).min()
+        current_high = df['high'].iloc[-1]
+        current_low = df['low'].iloc[-1]
+        
+        if current_high > recent_high:
+            return "BOS Bullish - Strong Momentum"
+        if current_low < recent_low:
+            return "BOS Bearish"
+        return "Range / Waiting for Break"
