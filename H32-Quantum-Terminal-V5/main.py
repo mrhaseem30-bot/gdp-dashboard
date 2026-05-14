@@ -1,88 +1,86 @@
 import streamlit as st
 import requests
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
 
-# --- 🛰️ GLOBAL COMMAND CENTER ---
-st.set_page_config(page_title="V1600 QUANTUM", layout="wide")
+# --- 🛰️ SUPREME SETTINGS ---
+st.set_page_config(page_title="V1700 OMNI", layout="wide")
 
+# --- 🌌 NEON INTERFACE (Auto-Fix for Mobile) ---
 st.markdown("""
 <style>
-    .stApp { background-color: #000308; color: white; }
-    .liquidity-card {
-        background: linear-gradient(145deg, #0a1118, #0e1a26);
-        border: 1px solid #00f2ff; border-radius: 15px;
-        padding: 25px; margin-bottom: 20px;
-        box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+    .stApp { background-color: #00050a; color: white; }
+    .omni-card {
+        background: #0a1118; border: 2px solid #00f2ff;
+        border-radius: 12px; padding: 18px; margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
     }
-    .trap-alert { color: #ff4b4b; font-weight: bold; animation: blinker 1.5s linear infinite; }
-    @keyframes blinker { 50% { opacity: 0; } }
-    .stat-val { font-size: 32px; font-weight: 900; color: #00f2ff; }
+    .neon-glow { color: #00f2ff; text-shadow: 0 0 8px #00f2ff; font-weight: bold; }
+    .price-big { font-size: 34px; font-weight: 900; margin: 10px 0; }
+    .alert-box { padding: 10px; border-radius: 5px; font-size: 13px; margin-top: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 🕒 12-HOUR DELHI SESSION TRACKER ---
+# --- 🕒 DELHI 12-HOUR TRACKER ---
 ist = pytz.timezone('Asia/Kolkata')
-now = datetime.now(ist)
-session_start = now.replace(hour=now.hour - (now.hour % 12), minute=0, second=0)
+now_ist = datetime.now(ist)
+st.markdown(f"<h1 style='text-align:center;' class='neon-glow'>🛰️ V1700 OMNI-TRACER</h1>", unsafe_allow_html=True)
+st.sidebar.write(f"🕰️ Delhi Session: {now_ist.strftime('%I:%M %p')}")
 
-st.markdown(f"<h1 style='text-align:center;'>🛰️ V1600 PSYCHOLOGY COMMAND</h1>", unsafe_allow_html=True)
-st.sidebar.info(f"🕰️ Active Session: {session_start.strftime('%I %p')} - 12 Hour Cycle")
-
-# --- 🧠 LIQUIDITY & TECHNICAL ENGINE ---
-COINS = ["BTC", "ETH", "SOL"]
+# --- 🧠 LIQUIDITY & PSYCHOLOGY LOGIC ---
+coins = ["BTC", "ETH", "SOL"]
 
 try:
-    # 📡 Live Market Data
-    url = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL&tsyms=USD"
-    res = requests.get(url).json()['RAW']
+    # Fetching Data
+    raw_data = requests.get("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL&tsyms=USD").json()['RAW']
 
-    for sym in COINS:
-        p = res[sym]['USD']['PRICE']
-        high = res[sym]['USD']['HIGH24HOUR']
-        low = res[sym]['USD']['LOW24HOUR']
-        vol = res[sym]['USD']['VOLUME24HOURTO']
+    for sym in coins:
+        p = raw_data[sym]['USD']['PRICE']
+        h = raw_data[sym]['USD']['HIGH24HOUR']
+        l = raw_data[sym]['USD']['LOW24HOUR']
+        v = raw_data[sym]['USD']['VOLUME24HOURTO']
         
-        # 🧪 PSYCHOLOGY LOGIC (The "No Fakeout" Filter)
-        # Retailers trap at 24h Highs. Liquidity is below 24h Lows.
-        liquidity_grab = low * 0.995  # Sniper Entry (Wick grab)
-        fakeout_zone = high * 1.005   # Trap Zone (Retailer Buy)
+        # 🔱 PSYCHOLOGY ENGINE: Detecting "Fik Mot" (Fakeouts)
+        # 1. Best Entry: Liquidity grab niche hoti hai (Puri Entry)
+        puri_entry = l * 0.992 
+        # 2. Zed Zone: Retailer trap upar hota hai
+        zed_zone = h * 1.008 
         
-        # 🛡️ SMART FILTER
-        is_fake_pump = True if (p > high * 0.98 and vol < (vol * 0.8)) else False
+        # Filter: Agar price high ke paas hai par volume low hai = FAKEOUT
+        is_fake = True if (p > h * 0.97 and v < 50000000) else False
 
-        with st.container():
-            st.markdown(f"""
-            <div class="liquidity-card">
-                <div style="display:flex; justify-content:space-between;">
-                    <h2 style="margin:0; color:#00f2ff;">{sym}/USDT</h2>
-                    <span class="trap-alert">{'⚠️ FAKE PUMP DETECTED' if is_fake_pump else '✅ REAL VOLUME'}</span>
+        # --- 📱 CLEAN RENDERING (No Raw Code) ---
+        st.markdown(f"""
+        <div class="omni-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:22px;" class="neon-glow">{sym}/USDT</span>
+                <span style="color:{'#ff4b4b' if is_fake else '#00ff88'}; font-weight:bold;">
+                    {'⚠️ FIK MOT (FAKE)' if is_fake else '✅ REAL VOLUME'}
+                </span>
+            </div>
+            
+            <div class="price-big">${p:,.2f}</div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div style="background:#1a0d0d; border:1px solid #ff4b4b; padding:10px; border-radius:8px; text-align:center;">
+                    <small style="color:#ff4b4b;">ZED ZONE (SELL)</small><br>
+                    <b>${zed_zone:,.2f}</b>
                 </div>
-                
-                <div class="stat-val">${p:,.2f}</div>
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:20px;">
-                    <div style="background:#1a0a0a; padding:10px; border-radius:8px; border:1px solid #ff4b4b;">
-                        <small style="color:#ff4b4b;">LIQUIDITY TRAP (SELL)</small><br>
-                        <b>${fakeout_zone:,.2f}</b>
-                    </div>
-                    <div style="background:#0a1a0f; padding:10px; border-radius:8px; border:1px solid #00ff88;">
-                        <small style="color:#00ff88;">BEST SNIPER ENTRY</small><br>
-                        <b>${liquidity_grab:,.2f}</b>
-                    </div>
-                </div>
-
-                <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.03); border-radius:10px;">
-                    <b style="color:#00f2ff;">🧠 MARKET PSYCHOLOGY VERDICT:</b><br>
-                    <p style="font-size:14px; color:#bbb; margin-top:5px;">
-                        Delhi 12-hour session ke mutabiq, retailers <b>${high:,.2f}</b> par buy kar rahe hain. 
-                        Lekin <b>Big Whale Liquidity</b> niche <b>${liquidity_grab:,.2f}</b> par baithi hai. 
-                        <b>Fik mot (Fakeout)</b> se bachne ke liye wait karein jab tak price niche wick na maare.
-                    </p>
+                <div style="background:#0d1a10; border:1px solid #00ff88; padding:10px; border-radius:8px; text-align:center;">
+                    <small style="color:#00ff88;">PURI ENTRY (BUY)</small><br>
+                    <b>${puri_entry:,.2f}</b>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+
+            <div class="alert-box" style="background:rgba(0,242,255,0.05); border-left:4px solid #00f2ff;">
+                <b style="color:#00f2ff;">🧠 LIQUIDITY ANALYSIS:</b><br>
+                Delhi 12-hour cycle ke mutabiq, retailers <b>${h:,.2f}</b> par trap ho rahe hain. 
+                Asli <b>Whale Liquidity</b> niche <b>${puri_entry:,.2f}</b> par hai. 
+                Wahan wick lagne ka intezar karein.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("📡 RESYNCING GLOBAL SATELLITE...")
+    st.error("📡 SATELLITE SYNC ERROR: Please update requirements.txt")
