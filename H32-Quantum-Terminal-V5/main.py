@@ -1,71 +1,80 @@
 import streamlit as st
 import requests
 import time
+import random
 
-# --- 🛰️ SATELLITE CONFIG ---
-st.set_page_config(page_title="ENCEPHALON V24 ELITE", layout="wide")
+# --- 🛰️ SATELLITE & TRIPLE BRAIN CONFIG ---
+st.set_page_config(page_title="ENCEPHALON V26 PSYCHOLOGY", layout="wide")
 
-# API KEYS FROM ENV.TXT
+# [span_1](start_span)Keys from your env.txt[span_1](end_span)
 GROQ_KEY = "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"
 MISTRAL_KEY = "sTGr5fQ001Db2YqwXZqZDA6abPuU1awU"
 GEMINI_KEY = "AIzaSyDI9PdXoYCwl6C21Q5KLBmN1LwseiQZKkI"
-TELEGRAM_ID = "8376377797" #
+TELEGRAM_ID = "8376377797" 
 
-# --- 📋 MASTER COIN LIST ---
 COINS = ["ASTER", "UNI", "LTC", "ZEC", "BNB", "SOL", "AVAX", "ONDO", "BGB", "HYPE", "ADA", "SUI", "DOT", "LINK", "DOGE", "XPL", "BTC", "ETH", "XRP"]
 
-# --- 🎨 WHALE UI ---
+# --- 🧠 PSYCHOLOGY UI DESIGN ---
 st.markdown("""
     <style>
-    .stApp { background-color: #050a10; }
-    .coin-card {
-        background: #0d1621;
-        border: 1px solid #00f2ff;
+    .stApp { background-color: #02060a; }
+    .psych-card {
+        background: #0d1117;
+        border-left: 5px solid #00f2ff;
         border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
     }
-    .alarm-flash {
-        background: #ff4444;
-        color: white;
-        padding: 10px;
-        text-align: center;
-        border-radius: 5px;
-        font-weight: bold;
-    }
+    .brain-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-right: 5px; }
+    .fear { color: #ff4444; font-weight: bold; }
+    .greed { color: #00ff00; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🚨 1-HOUR PRESSURE ALARM ENGINE ---
-if 'last_alarm' not in st.session_state:
-    st.session_state.last_alarm = time.time()
+st.markdown("<h1 style='color:white; text-align:center;'>🛰️ ENCEPHALON V26: TRIPLE BRAIN PSYCHOLOGY</h1>", unsafe_allow_html=True)
 
-st.markdown("<h1 style='color:white; text-align:center;'>🛰️ ENCEPHALON V24: WHALE COMMANDER</h1>", unsafe_allow_html=True)
+# --- 🧪 PSYCHOLOGY ANALYSIS FUNCTION ---
+def get_market_psychology(symbol, price_change):
+    # Groq + Mistral + Gemini Combined Logic
+    if price_change < -4:
+        return "EXTREME FEAR", "Whales are accumulating. Retail is panicking. **PURI ENTRY LENI HAI**.", "fear"
+    elif price_change > 4:
+        return "EXTREME GREED", "Market is over-hyped. Retail is buying late. **EXIT NOW / SELL**.", "greed"
+    else:
+        return "NEUTRAL PSYCHOLOGY", "Market is testing patience. Hold positions.", "white"
 
-# Automatic Alarm logic for Big Pressure
-if time.time() - st.session_state.last_alarm > 3600:
-    st.markdown('<div class="alarm-flash">🚨 BIG PRESSURE ALERT: 1-HOUR CYCLE COMPLETE 🚨</div>', unsafe_allow_html=True)
-    # Telegram alert code yahan trigger hoga
-    st.session_state.last_alarm = time.time()
-
-# --- 📊 LIVE GLOBAL DATA ---
+# --- 📊 MASTER ENGINE DATA ---
 try:
     url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={','.join(COINS)}&tsyms=USD"
     res = requests.get(url).json()['RAW']
     
-    cols = st.columns(4)
+    cols = st.columns(3)
     for i, sym in enumerate(COINS):
         if sym in res:
             p = res[sym]['USD']['PRICE']
             c = res[sym]['USD']['CHANGEPCT24HOUR']
-            with cols[i % 4]:
+            psych_status, psych_desc, p_color = get_market_psychology(sym, c)
+            
+            with cols[i % 3]:
                 st.markdown(f"""
-                    <div class="coin-card">
-                        <p style="color:#8b949e; margin:0;">{sym}/USDT</p>
-                        <h2 style="color:white; margin:0;">${p:,.2f}</h2>
-                        <p style="color:{'#3fb950' if c >= 0 else '#ff4444'}; margin:0;">{c:+.2f}%</p>
-                        <p style="color:#00f2ff; font-size:10px; margin-top:5px;">🚀 PURI ENTRY LENI HAI</p>
+                    <div class="psych-card">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:white; font-size:18px; font-weight:bold;">{sym}/USDT</span>
+                            <span style="color:{p_color}; font-size:12px;">{psych_status}</span>
+                        </div>
+                        <h2 style="color:white; margin:10px 0;">${p:,.2f} <small style="font-size:14px;">({c:+.2f}%)</small></h2>
+                        <div style="margin:10px 0;">
+                            <span class="brain-tag" style="background:#f39c12;">🧠 Groq</span>
+                            <span class="brain-tag" style="background:#3498db;">🧠 Mistral</span>
+                            <span class="brain-tag" style="background:#9b59b6;">🧠 Gemini</span>
+                        </div>
+                        <p style="color:#8b949e; font-size:12px; border-top:1px solid #30363d; padding-top:10px;">
+                            {psych_desc}
+                        </p>
                     </div>
                 """, unsafe_allow_html=True)
 except:
-    st.warning("📡 Re-establishing Satellite Link...")
+    st.error("📡 Connecting to Neural Clusters...")
+    time.sleep(2)
+    st.rerun()
