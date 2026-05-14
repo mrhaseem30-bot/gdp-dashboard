@@ -1,89 +1,88 @@
 import streamlit as st
-import pandas as pd
 import requests
 import time
 from datetime import datetime
 
-# --- 🛰️ MASTER CONFIG & AI BRAINS ---
-st.set_page_config(page_title="ENCEPHALON V21 ELITE", layout="wide")
-[span_1](start_span)GROQ_KEY = "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" #[span_1](end_span)
-[span_2](start_span)MISTRAL_KEY = "sTGr5fQ001Db2YqwXZqZDA6abPuU1awU" #[span_2](end_span)
-[span_3](start_span)GEMINI_KEY = "AIzaSyDI9PdXoYCwl6C21Q5KLBmN1LwseiQZKkI" #[span_3](end_span)
+# --- 🛰️ SATELLITE CONFIG ---
+st.set_page_config(page_title="ENCEPHALON V23 ELITE", layout="wide")
 
-# --- 🎨 PREMIMUM NEON UI (Screenshot 214819 Style) ---
+# API KEYS & IDs (Linked from your files)
+[span_0](start_span)GROQ_KEY = "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"[span_0](end_span)
+[span_1](start_span)MISTRAL_KEY = "sTGr5fQ001Db2YqwXZqZDA6abPuU1awU"[span_1](end_span)
+[span_2](start_span)GEMINI_KEY = "AIzaSyDI9PdXoYCwl6C21Q5KLBmN1LwseiQZKkI"[span_2](end_span)
+TELEGRAM_ID = "8376377797"
+BOT_TOKEN = "APKA_BOT_TOKEN_YAHAN_DALEIN" 
+
+# --- 📋 FULL COIN LIST (Linked from Screenshot 094220) ---
+COIN_LIST = [
+    "ASTER", "UNI", "LTC", "ZEC", "BNB", "SOL", "AVAX", "ONDO", 
+    "BGB", "HYPE", "ADA", "SUI", "DOT", "LINK", "DOGE", "XPL", "BTC", "ETH", "XRP"
+]
+
+# --- 🎨 WHALE-SATELLITE UI ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a10; }
-    .satellite-card {
+    .coin-card {
         background: #0d1621;
-        border: 2px solid #00f2ff;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        border: 1px solid #00f2ff;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
     }
-    .action-btn {
-        background: linear-gradient(45deg, #00f2ff, #0072ff);
-        color: white !important;
-        font-weight: bold;
-        border-radius: 8px;
+    .pressure-alert {
+        background: linear-gradient(45deg, #ff0000, #440000);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
         text-align: center;
-        padding: 10px;
-        text-decoration: none;
-        display: block;
-        margin: 5px 0;
+        font-weight: bold;
+        animation: blinker 1.5s linear infinite;
     }
-    .insta-alert { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+    @keyframes blinker { 50% { opacity: 0; } }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🌍 UNLIMITED DATA & LIQUIDITY ENGINE ---
-def fetch_whale_intel():
-    url = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SUI,SOL,DOT&tsyms=USD"
-    try:
-        r = requests.get(url, timeout=5)
-        if r.status_code == 200:
-            return r.json()['RAW']
-    except: return None
+# --- 🚨 AUTOMATIC ALARM & PRESSURE ENGINE ---
+def send_telegram_alert(msg):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    requests.post(url, json={"chat_id": TELEGRAM_ID, "text": msg})
 
-# --- 📱 COMMAND CENTER ---
-st.markdown("<h1 style='color:white; text-align:center;'>🛰️ ENCEPHALON V21: WHALE COMMANDER</h1>", unsafe_allow_html=True)
+if 'alarm_time' not in st.session_state:
+    st.session_state.alarm_time = time.time()
 
-data = fetch_whale_intel()
+# --- 📱 MASTER DASHBOARD ---
+st.markdown("<h1 style='color:white; text-align:center;'>🛰️ ENCEPHALON V23: GLOBAL COMMANDER</h1>", unsafe_allow_html=True)
 
-if data:
-    cols = st.columns(len(data))
-    for i, (sym, val) in enumerate(data.items()):
-        p = val['USD']['PRICE']
-        c = val['USD']['CHANGEPCT24HOUR']
-        liq = val['USD']['TOTALVOLUME24H'] # Liquidity Tracking
-        
-        # 🧠 AI PREDICTION LOGIC (Kitne din upar jayegi)
-        days_up = "3-5 Days" if c > 0 else "Correction Phase"
-        
-        with cols[i]:
-            st.markdown(f"""
-                <div class="satellite-card">
-                    <div style="color:white; font-size:18px;">● {sym}/USDT <span style="color:#3fb950;">{c:+.2f}%</span></div>
-                    <div style="color:white; font-size:35px; font-weight:bold;">${p:,.2f}</div>
-                    
-                    <div style="background:rgba(0,242,255,0.1); padding:8px; border-radius:5px; margin:10px 0;">
-                        <p style="color:#00f2ff; font-size:12px; margin:0;">🛰️ SATELLITE PREDICTION</p>
-                        <p style="color:white; font-weight:bold; margin:0;">BULLISH FOR: {days_up}</p>
-                        <p style="color:#8b949e; font-size:10px;">LIQUIDITY: ${liq:,.0f}</p>
+# Check for Big Pressure (1 Hour Alarm)
+if time.time() - st.session_state.alarm_time > 3600:
+    st.markdown('<div class="pressure-alert">🚨 BIG PRESSURE DETECTED! 1-HOUR ALARM TRIGGERED 🚨</div>', unsafe_allow_html=True)
+    send_telegram_alert("⚠️ URGENT: Big pressure on market detected. Check Encephalon now!")
+    st.session_state.alarm_time = time.time()
+
+# --- 🌍 LIVE COIN GRID ---
+try:
+    # Multiple sources for Unlimited Data
+    url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={','.join(COIN_LIST)}&tsyms=USD"
+    res = requests.get(url).json()['RAW']
+    
+    cols = st.columns(4) # 4 columns for clean look
+    for idx, sym in enumerate(COIN_LIST):
+        if sym in res:
+            p = res[sym]['USD']['PRICE']
+            c = res[sym]['USD']['CHANGEPCT24HOUR']
+            v = res[sym]['USD']['VOLUME24HOUR']
+            
+            with cols[idx % 4]:
+                color = "#3fb950" if c >= 0 else "#ff4444"
+                st.markdown(f"""
+                    <div class="coin-card">
+                        <div style="color:white; font-size:14px; font-weight:bold;">● {sym}/USDT</div>
+                        <div style="color:white; font-size:24px; font-weight:800;">${p:,.2f}</div>
+                        <div style="color:{color}; font-size:14px;">{c:+.2f}%</div>
+                        <div style="color:#8b949e; font-size:10px;">Pressure: {'High' if v > 1000000 else 'Stable'}</div>
                     </div>
-
-                    <a href="https://www.instagram.com/direct/inbox/" target="_blank" class="action-btn insta-alert">📸 INSTA URGENT BUY ALERT</a>
-                    <a href="#" class="action-btn" style="background:#ff4444;">🚨 URGENT SELL NOW</a>
-                    <div style="display:flex; gap:5px;">
-                        <div style="flex:1; background:#16212e; color:#58a6ff; font-size:10px; padding:5px; border-radius:5px; text-align:center;">TRACK LIQUIDITY</div>
-                        <div style="flex:1; background:#16212e; color:#58a6ff; font-size:10px; padding:5px; border-radius:5px; text-align:center;">FLOPPY VIEW</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-else:
-    st.error("📡 Re-routing Satellite Signal...")
-    time.sleep(3)
-    st.rerun()
-
-st.divider()
-st.info("📂 **Neural Memory**: All urgent signals and liquidity flows are being stored in the global chain.")
+                """, unsafe_allow_html=True)
+except Exception as e:
+    st.error("📡 Signal Lost. Re-scanning Clusters...")
