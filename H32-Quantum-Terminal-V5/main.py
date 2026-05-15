@@ -34,26 +34,22 @@ st.markdown("""
     /* Advance Pre-Order Alert styling */
     .advance-warning-box { background: linear-gradient(90deg, #161c2e, #0f1b36); border-left: 6px solid #58a6ff; border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #e2edfd; }
     
-    /* Distinct Terminal Pipelines */
-    .pipeline-header { font-size: 1.3rem; font-weight: bold; margin-top: 15px; margin-bottom: 10px; border-bottom: 2px solid #30363d; padding-bottom: 5px; }
+    /* Consolidated Master Screen styling */
+    .master-balden-card { background: linear-gradient(145deg, #0f1626, #161f38); border: 2px solid #30363d; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 25px; }
+    .master-headline { font-size: 1.8rem; font-weight: bold; color: #58a6ff; text-align: center; margin-bottom: 25px; border-bottom: 1px solid #30363d; padding-bottom: 15px; letter-spacing: 1px; }
     
-    /* Log Entries Custom Badges */
-    .list-log { font-family: 'Courier New', monospace; font-size: 12.5px; background-color: #161b22; padding: 10px; border-radius: 6px; margin-bottom: 6px; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
-    .badge-danger { color: #ff4b4b; font-weight: bold; }
-    .badge-success { color: #00ff88; font-weight: bold; }
-    .badge-blue { color: #58a6ff; font-weight: bold; }
+    /* Inside Master Rows */
+    .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed #21262d; }
+    .metric-label { font-size: 1.2rem; font-weight: 500; color: #c9d1d9; }
+    .metric-val-plus { font-size: 1.5rem; font-weight: bold; color: #00ff88; font-family: 'Courier New', monospace; }
+    .metric-val-minus { font-size: 1.5rem; font-weight: bold; color: #ff4b4b; font-family: 'Courier New', monospace; }
     
-    /* Summary and Target Components */
+    /* Target Components */
     .predict-box { padding: 22px; border-radius: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; }
     .whale-entry-zone { border: 2px solid #00ff88; background-color: #041910; color: #00ff88; }
     .whale-exit-zone { border: 2px solid #ff4b4b; background-color: #220b0d; color: #ff4b4b; }
     
-    .net-flow-card { border-radius: 15px; padding: 22px; text-align: center; font-weight: bold; margin-bottom: 20px; font-size: 1.3rem; }
-    .net-plus { border: 2px solid #00ff88; background-color: #051a10; color: #00ff88; }
-    .net-minus { border: 2px solid #ff4b4b; background-color: #220b0d; color: #ff4b4b; }
-    
-    .summary-box-in { border: 2px solid #58a6ff; background-color: #0c1a30; color: #58a6ff; border-radius: 12px; padding: 15px; text-align: center; font-weight: bold; }
-    .summary-box-out { border: 2px solid #ff4b4b; background-color: #220b0d; color: #ff4b4b; border-radius: 12px; padding: 15px; text-align: center; font-weight: bold; }
+    .net-flow-card { border-radius: 15px; padding: 25px; text-align: center; font-weight: bold; margin-bottom: 20px; font-size: 1.5rem; border: 2px solid #58a6ff; background-color: #0c1a30; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -69,7 +65,6 @@ st.sidebar.markdown("### 🏛️ ALADDIN COMMAND UNIT")
 watchlist = ["BTC", "ETH", "SOL", "LINK", "DOT", "SHIB", "BONE"]
 selected_asset = st.sidebar.selectbox("📂 PORTFOLIO TARGET", watchlist)
 
-# --- 📅 SEQUENTIAL TIME MAP (15 MINS TO 1 WEEK WEEKLY MACRO) ---
 time_panel = {
     "⏱️ 15 Minutes Micro Scalp": "15m",
     "⏱️ 30 Minutes Session Spread": "30m",
@@ -84,31 +79,35 @@ time_panel = {
 selected_tf_label = st.sidebar.selectbox("⏱️ SELECT PREDICTION TIME ENGINE", list(time_panel.keys()))
 active_tf_code = time_panel[selected_tf_label]
 
-# Persistent Historical Cumulative States
-if f"hist_in_{selected_asset}" not in st.session_state: st.session_state[f"hist_in_{selected_asset}"] = random.uniform(50_000_000, 120_000_000)
-if f"hist_out_{selected_asset}" not in st.session_state: st.session_state[f"hist_out_{selected_asset}"] = random.uniform(40_000_000, 95_000_000)
+# Persistent States for Continuous Automatic Second-by-Second Growth
+if f"m_leakage_{selected_asset}" not in st.session_state: st.session_state[f"m_leakage_{selected_asset}"] = random.uniform(200_000_000, 450_000_000)
+if f"m_usd_hold_{selected_asset}" not in st.session_state: st.session_state[f"m_usd_hold_{selected_asset}"] = random.uniform(150_000_000, 380_000_000)
+if f"m_fiat_in_{selected_asset}" not in st.session_state: st.session_state[f"m_fiat_in_{selected_asset}"] = random.uniform(300_000_000, 600_000_000)
 
-if st.sidebar.button("🔄 Reset Global Flow Matrix"):
-    st.session_state[f"hist_in_{selected_asset}"] = 0.0
-    st.session_state[f"hist_out_{selected_asset}"] = 0.0
+if st.sidebar.button("🔄 Reset Master Data Screen"):
+    st.session_state[f"m_leakage_{selected_asset}"] = 200_000_000.0
+    st.session_state[f"m_usd_hold_{selected_asset}"] = 150_000_000.0
+    st.session_state[f"m_fiat_in_{selected_asset}"] = 300_000_000.0
     st.rerun()
 
-# Dynamic Ticks Generation Engine (Incremental Numbers changing every second)
-tick_inflow_growth = random.uniform(2_500_000, 8_500_000)
-tick_outflow_growth = random.uniform(1_500_000, 7_500_000)
+# Dynamic Auto Increment Ticks (Updates every single second)
+st.session_state[f"m_leakage_{selected_asset}"] += random.uniform(1_500_000, 4_500_000)
+st.session_state[f"m_usd_hold_{selected_asset}"] += random.uniform(2_000_000, 5_500_000)
+st.session_state[f"m_fiat_in_{selected_asset}"] += random.uniform(3_500_000, 8_500_000)
 
-st.session_state[f"hist_in_{selected_asset}"] += tick_inflow_growth
-st.session_state[f"hist_out_{selected_asset}"] += tick_outflow_growth
+leakage_total = st.session_state[f"m_leakage_{selected_asset}"]
+usd_hold_total = st.session_state[f"m_usd_hold_{selected_asset}"]
+fiat_in_total = st.session_state[f"m_fiat_in_{selected_asset}"]
 
-total_in_ever = st.session_state[f"hist_in_{selected_asset}"]
-total_out_ever = st.session_state[f"hist_out_{selected_asset}"]
+# Net Calculation Math logic
+net_market_inflow_fiat = fiat_in_total - leakage_total
+net_wallet_usd_balance = usd_hold_total - leakage_total
 
-# Dynamic Price generation simulation based on assets
+# Core Baseline Price Generation
 curr_price = 88450.00 if selected_asset == "BTC" else (3250.00 if selected_asset == "ETH" else 165.50)
-curr_price += random.uniform(-curr_price*0.002, curr_price*0.002)
+curr_price += random.uniform(-curr_price*0.001, curr_price*0.001)
 
-# Adjustment of buffers depending on structural macro selections
-multiplier = 1.05 if "1w" in active_tf_code else (1.02 if "1d" in active_tf_code else 1.006)
+multiplier = 1.04 if "1w" in active_tf_code else (1.015 if "1d" in active_tf_code else 1.005)
 pre_order_buy_limit = curr_price * (2.0 - multiplier)
 pre_order_sell_limit = curr_price * multiplier
 
@@ -132,7 +131,7 @@ if selected_asset:
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"<h2>🏛:// SATELLITE CORE SYSTEM: {selected_asset}/USDT</h2>")
+    st.markdown(f"<h2>🏛:// SATELLITE SYSTEM ENGINE: {selected_asset}/USDT</h2>")
     st.markdown(f"### DYNAMIC PRICE LEVEL: <span style='color:#00ff88;'>${curr_price:,.4f}</span> | Time Variant: `{active_tf_code.upper()}`")
     st.write("---")
 
@@ -144,77 +143,52 @@ if selected_asset:
         st.markdown(f"<div class='predict-box whale-exit-zone'>🟥 ALADDIN PREDICTED EXIT / SEL POINT<br><span style='font-size:30px; color:white;'>${pre_order_sell_limit:,.4f}</span><br><small style='font-size:12px; font-weight:normal;'>Timeframe Ceiling Resistance Barrier</small></div>", unsafe_allow_html=True)
 
     st.write("---")
-    
-    # === 📊 PHASE 4: THREE SEPARATE PIPELINES ===
-    st.subheader(f"📡 LIVE INSTITUTIONAL FUNDS ROUTING STATUS ({active_tf_code.upper()} INTERVAL)")
-    
-    col_p1, col_p2, col_p3 = st.columns(3)
-    
-    # --- PIPELINE 1: COLD STORAGE EX-MIGRATION TRACKER ---
-    with col_p1:
-        st.markdown("<div class='pipeline-header' style='color:#ff4b4b;'>⚠️ LIST 1: WALLET ➡️ EXCHANGE (Dumping)</div>", unsafe_allow_html=True)
-        addresses_p1 = ["0xWhale9981", "0xColdBinance4412", "0xInstitutional7102", "0xAssetTrap9551"]
-        for addr in addresses_p1:
-            v_raw = random.uniform(5_000_000, 28_000_000)
-            st.markdown(f"""
-                <div class='list-log'>
-                    🔑 Address: <span style='color:#c9d1d9;'>{addr}</span><br>
-                    💥 Status: <span class='badge-danger'>[-] ASSET MIGRATED TO EXCHANGE</span><br>
-                    💰 Value: <span style='color:white; font-weight:bold;'>{format_institutional_million_cash(v_raw)}</span>
-                </div>
-            """, unsafe_allow_html=True)
-            
-    # --- PIPELINE 2: CRYPTO TO USD/STABLECOIN ROTATION ---
-    with col_p2:
-        st.markdown("<div class='pipeline-header' style='color:#58a6ff;'>💵 LIST 2: ASSET ➡️ USD / STABLECOIN (Safe Hold)</div>", unsafe_allow_html=True)
-        addresses_p2 = ["0xSmartProfit8812", "0xBlackRockUSD_01", "0xStableReserve3341", "0xWhaleExit7762"]
-        for addr in addresses_p2:
-            v_raw = random.uniform(6_000_000, 35_000_000)
-            st.markdown(f"""
-                <div class='list-log'>
-                    🔑 Address: <span style='color:#c9d1d9;'>{addr}</span><br>
-                    🔄 Status: <span class='badge-blue'>[+] PROFITS STORED IN STABLECOIN</span><br>
-                    💰 Value: <span style='color:white; font-weight:bold;'>{format_institutional_million_cash(v_raw)}</span>
-                </div>
-            """, unsafe_allow_html=True)
-            
-    # --- PIPELINE 3: FIAT ON-RAMP BUY INTO WALLET ---
-    with col_p3:
-        st.markdown("<div class='pipeline-header' style='color:#00ff88;'>🛒 LIST 3: USD BUY ➡️ WALLET DIRECT (Accumulation)</div>", unsafe_allow_html=True)
-        addresses_p3 = ["0xOnRampWhale001", "0xDirectBuySmart82", "0xInstitutionalCold_99", "0xMicroStrategyInflow"]
-        for addr in addresses_p3:
-            v_raw = random.uniform(8_000_000, 42_000_000)
-            st.markdown(f"""
-                <div class='list-log'>
-                    🔑 Address: <span style='color:#c9d1d9;'>{addr}</span><br>
-                    🛍️ Status: <span class='badge-success'>[+] DIRECT CASH INFLOW INTO COLD WALLET</span><br>
-                    💰 Value: <span style='color:white; font-weight:bold;'>{format_institutional_million_cash(v_raw)}</span>
-                </div>
-            """, unsafe_allow_html=True)
 
-    # === 🧮 PHASE 5: TRUE CUMULATIVE FLOW MATRIX ===
-    st.write("---")
-    st.subheader("📊 CUMULATIVE CAPITAL TREND STATS (Auto Incrementing Elements)")
+    # === 🏛️ PHASE 4: THE BIG CONSOLIDATED MASTER SCREEN (BADI SCREEN) ===
+    st.markdown("""
+        <div class='master-balden-card'>
+            <div class='master-headline'>📊 ALADDIN GLOBAL REAL-TIME WALLET LIQUIDITY MATRIX</div>
+    """, unsafe_allow_html=True)
     
-    total_combined_ever = total_in_ever + total_out_ever
-    if total_combined_ever > 0:
-        inflow_percentage = (total_in_ever / total_combined_ever) * 100
-        outflow_percentage = (total_out_ever / total_combined_ever) * 100
+    # Row 1: Wallet Se Exchange Leakage (Dumping Action)
+    st.markdown(f"""
+        <div class='metric-row'>
+            <div class='metric-label'>⚠️ 1. WALLET TO EXCHANGE LEAKAGE (Asset moving out of Wallets into Exchanges)</div>
+            <div class='metric-val-minus'>-{format_institutional_million_cash(leakage_total)}</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Row 2: Asset Nikal Kar USD Mein Rakhna
+    sign_usd = "+" if net_wallet_usd_balance >= 0 else "-"
+    class_usd = "metric-val-plus" if net_wallet_usd_balance >= 0 else "metric-val-minus"
+    st.markdown(f"""
+        <div class='metric-row'>
+            <div class='metric-label'>💵 2. CASH ROTATION HOLDING (Whales taking assets out and holding in USD/Stablecoin)</div>
+            <div class='class_usd' style='font-size:1.5rem; font-weight:bold; font-family:"Courier New", monospace;'>{sign_usd}{format_institutional_million_cash(abs(net_wallet_usd_balance))}</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Row 3: Dollar Se Direct Khareed Kar Wallet Mein Dalna (On-Ramp Inflow)
+    sign_fiat = "+" if net_market_inflow_fiat >= 0 else "-"
+    class_fiat = "metric-val-plus" if net_market_inflow_fiat >= 0 else "metric-val-minus"
+    st.markdown(f"""
+        <div class='metric-row'>
+            <div class='metric-label'>🛒 3. DIRECT FIAT ON-RAMP ACCUMULATION (Buying with Dollar directly into Cold Wallets)</div>
+            <div class='{class_fiat}'>{sign_fiat}{format_institutional_million_cash(abs(net_market_inflow_fiat))}</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Close Consolidated Balden Block Card
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # === 🧮 PHASE 5: MASTER CUMULATIVE VOLUME STATUS ===
+    st.subheader("📊 CONSOLIDATED NET TREND MATRIX")
+    grand_net_score = net_market_inflow_fiat + net_wallet_usd_balance
+    
+    if grand_net_score >= 0:
+        st.markdown(f"<div class='net-flow-card' style='border:2px solid #00ff88; background-color:#051a10; color:#00ff88;'>🟩 CONSOLIDATED CAPITAL STATUS: PLUS (+) NET SURPLUS<br><span style='font-size:32px; color:white;'>+{format_institutional_million_cash(grand_net_score)} Cash Flow Growing Injected</span></div>", unsafe_allow_html=True)
     else:
-        inflow_percentage, outflow_percentage = 0.0, 0.0
-
-    if total_in_ever >= total_out_ever:
-        net_diff_pct = inflow_percentage - outflow_percentage
-        st.markdown(f"<div class='net-flow-card net-plus'>🟢 NETWORK NET STATUS: PLUS (+) | Whales are Overwhelmingly Securing Assets!<br><span style='font-size:32px; color:white;'>+{net_diff_pct:.2f}% Real Cash Surplus Across Pipelines</span></div>", unsafe_allow_html=True)
-    else:
-        net_diff_pct = outflow_percentage - inflow_percentage
-        st.markdown(f"<div class='net-flow-card net-minus'>🔴 NETWORK NET STATUS: MINUS (-) | Warning! Dominant Asset Extraction and Liquidation Running!<br><span style='font-size:32px; color:white;'>-{net_diff_pct:.2f}% Real Liquidation Run Detected</span></div>", unsafe_allow_html=True)
-
-    col_sum_in, col_sum_out = st.columns(2)
-    with col_sum_in:
-        st.markdown(f"<div class='summary-box-in'><h3 style='margin:0; color:#58a6ff;'>🟦 TOTAL ACCOUNT INFLOW (List 2 + List 3)</h3><p style='font-size:28px; margin:5px 0; color:white;'>{format_institutional_million_cash(total_in_ever)}</p><small>Cumulative Wallet Load Share: {inflow_percentage:.1f}%</small></div>", unsafe_allow_html=True)
-    with col_sum_out:
-        st.markdown(f"<div class='summary-box-out'><h3 style='margin:0; color:#ff4b4b;'>🟥 TOTAL ACCOUNT OUTFLOW (List 1 Leakage)</h3><p style='font-size:28px; margin:5px 0; color:white;'>{format_institutional_cash(total_out_ever)}</p><small>Exchange Dump Exposure Share: {outflow_percentage:.1f}%</small></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='net-flow-card' style='border:2px solid #ff4b4b; background-color:#220b0d; color:#ff4b4b;'>🟥 CONSOLIDATED CAPITAL STATUS: MINUS (-) NET LIQUIDATION<br><span style='font-size:32px; color:white;'>-{format_institutional_million_cash(abs(grand_net_score))} Outflow Exhaustion Detected</span></div>", unsafe_allow_html=True)
 
 st.components.v1.html("""
     <script>
