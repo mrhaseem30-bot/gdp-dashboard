@@ -2,215 +2,411 @@ import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-import time
+from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
 
-# ====================== CONFIG ======================
-st.set_page_config(page_title="H32 GLOBAL RADAR V58", layout="wide", initial_sidebar_state="expanded")
+# =========================================================
+# 🏛️ H32 INSTITUTIONAL SMART MONEY RADAR
+# =========================================================
 
-# Persistent 30-day Vaults
-if "persistent_buy_vault_30d" not in st.session_state:
-    st.session_state.persistent_buy_vault_30d = []
-if "persistent_sell_vault_30d" not in st.session_state:
-    st.session_state.persistent_sell_vault_30d = []
+st.set_page_config(
+    page_title="H32 SMART MONEY RADAR",
+    layout="wide"
+)
 
-# ====================== STYLING ======================
+# =========================================================
+# 🔄 AUTO REFRESH
+# =========================================================
+
+refresh_seconds = 3
+
+st_autorefresh(
+    interval=refresh_seconds * 1000,
+    key="h32_radar_refresh"
+)
+
+# =========================================================
+# 🎨 UI STYLE
+# =========================================================
+
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(135deg, #020409, #050a14); color: #f0f6fc; }
-    .main { padding: 8px !important; }
-    h2, h3 { margin: 4px 0 !important; font-weight: 800; }
-    
-    .blue-limit-radar {
-        background: linear-gradient(145deg, #051429, #092347);
-        border: 2px solid #0052cc;
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
-        font-weight: bold;
-        color: #3385ff;
-        box-shadow: 0 0 20px rgba(0, 82, 204, 0.4);
-    }
-    
-    .terminal-card {
-        background-color: #080d16;
-        border: 1px solid #162235;
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
-    }
-    .split-box-inflow { background: linear-gradient(145deg, #041a10, #082618); border: 1px solid #00ff88; border-radius: 8px; padding: 12px; }
-    .split-box-outflow { background: linear-gradient(145deg, #200a0c, #301013); border: 1px solid #ff4b4b; border-radius: 8px; padding: 12px; }
-    
-    .stMetricValue { font-size: 1.1rem !important; font-weight: bold; }
-    .stDataFrame { font-size: 0.78rem; }
+
+.stApp{
+    background:linear-gradient(135deg,#020409,#07111f);
+    color:white;
+}
+
+.main{
+    padding:8px !important;
+}
+
+.block-container{
+    padding-top:1rem;
+}
+
+h1,h2,h3{
+    color:white;
+}
+
+.radar-box{
+    background:#08111d;
+    border:1px solid #1b2b45;
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:8px;
+}
+
+.buy-box{
+    background:linear-gradient(145deg,#071a12,#0a2c1d);
+    border:1px solid #00ff88;
+    border-radius:10px;
+    padding:12px;
+}
+
+.sell-box{
+    background:linear-gradient(145deg,#220d0d,#341313);
+    border:1px solid #ff4b4b;
+    border-radius:10px;
+    padding:12px;
+}
+
+.signal-box{
+    background:linear-gradient(145deg,#0a1222,#101c33);
+    border:1px solid #3385ff;
+    border-radius:10px;
+    padding:12px;
+}
+
+.big-text{
+    font-size:1.2rem;
+    font-weight:bold;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-def format_cash(val):
-    if abs(val) >= 1_000_000_000:
-        return f"${val/1e9:.3f}B"
-    elif abs(val) >= 1_000_000:
-        return f"${val/1e6:.2f}M"
-    return f"${val:,.0f}"
+# =========================================================
+# 📂 SIDEBAR
+# =========================================================
 
-# ====================== DATA FETCH ======================
+st.sidebar.title("🏛️ H32 CONTROL PANEL")
+
+watchlist = [
+    "BTC",
+    "ETH",
+    "SOL",
+    "DOGE",
+    "XRP",
+    "SHIB",
+    "BONE"
+]
+
+selected_asset = st.sidebar.selectbox(
+    "📊 SELECT ASSET",
+    watchlist
+)
+
+depth_limit = st.sidebar.slider(
+    "📚 ORDERBOOK DEPTH",
+    20,
+    500,
+    100
+)
+
+# =========================================================
+# 🌐 REQUEST SESSION
+# =========================================================
+
+session = requests.Session()
+
+# =========================================================
+# 📡 FETCH MARKET DATA
+# =========================================================
+
 @st.cache_data(ttl=2)
-def fetch_market_data(ticker):
+
+def fetch_market_data(symbol):
+
     try:
-        price_res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={ticker}USDT", timeout=1.5).json()
-        depth = requests.get(f"https://api.binance.com/api/v3/depth?symbol={ticker}USDT&limit=50", timeout=1.5).json()
-        stats = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={ticker}USDT", timeout=1.5).json()
 
-        current = float(price_res['price'])
-        high = float(stats['highPrice'])
-        low = float(stats['lowPrice'])
-        change = float(stats['priceChangePercent'])
+        # PRICE
+        price_url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}USDT"
+        price_res = session.get(price_url, timeout=2).json()
 
-        bids = depth['bids']
-        asks = depth['asks']
+        # 24H
+        stats_url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}USDT"
+        stats_res = session.get(stats_url, timeout=2).json()
+
+        # DEPTH
+        depth_url = f"https://api.binance.com/api/v3/depth?symbol={symbol}USDT&limit={depth_limit}"
+        depth_res = session.get(depth_url, timeout=2).json()
+
+        price = float(price_res["price"])
+
+        high = float(stats_res["highPrice"])
+        low = float(stats_res["lowPrice"])
+        change = float(stats_res["priceChangePercent"])
+
+        bids = depth_res["bids"]
+        asks = depth_res["asks"]
 
         return {
-            "price": current,
+            "price": price,
             "high": high,
             "low": low,
             "change": change,
-            "buy_floor": float(bids[0][0]),
-            "sell_start": float(asks[0][0]),
-            "sell_end": float(asks[-1][0])
+            "bids": bids,
+            "asks": asks
         }
-    except:
-        # Fallback
-        fallback_data = {
-            "ETH": {"price": 2194.21, "high": 2350, "low": 2110.5, "change": -3.2, "buy_floor": 2150, "sell_start": 2210, "sell_end": 2450},
-            "BTC": {"price": 68250, "high": 69500, "low": 67000, "change": 1.2, "buy_floor": 67500, "sell_start": 69000, "sell_end": 72000}
-        }.get(ticker, {"price": 1.0, "high": 1.1, "low": 0.9, "change": 0, "buy_floor": 0.95, "sell_start": 1.0, "sell_end": 1.1})
-        return fallback_data
 
-# ====================== SIDEBAR ======================
-st.sidebar.markdown("### 🏛️ HORIZON ENGINE CONTROLS V58")
-watchlist = ["ETH", "BTC", "SOL", "DOT", "SHIB", "BONE"]
-selected_asset = st.sidebar.selectbox("📂 SELECT ASSET", watchlist)
-refresh_rate = st.sidebar.slider("🔄 Sync Pulse Speed (sec)", 1, 5, 2)
+    except Exception as e:
 
-# ====================== LIVE DATA ======================
+        st.error(f"API ERROR: {e}")
+
+        return None
+
+# =========================================================
+# 📊 LOAD DATA
+# =========================================================
+
 data = fetch_market_data(selected_asset)
+
+if data is None:
+    st.stop()
+
 live_price = data["price"]
-d_high = data["high"]
-d_low = data["low"]
-d_change = data["change"]
-true_buy_floor = data["buy_floor"]
-true_sell_start = data["sell_start"]
-true_sell_end = data["sell_end"]
+high_price = data["high"]
+low_price = data["low"]
+change_percent = data["change"]
 
-# ETH special override (as per original)
-if selected_asset == "ETH":
-    true_buy_floor = 2150.00
-    true_sell_start = 2210.00
-    true_sell_end = 2450.00
+bids_raw = data["bids"]
+asks_raw = data["asks"]
 
-dec = 6 if live_price < 0.1 else 2
-now_time = datetime.now()
+# =========================================================
+# 🧠 SMART MONEY ANALYSIS
+# =========================================================
 
-# ====================== UI ======================
-st.markdown(f"<h2>🏛:// ALADDIN QUANTUM NERVE CENTER — {selected_asset}/USDT</h2>", unsafe_allow_html=True)
+largest_bid = max(
+    bids_raw,
+    key=lambda x: float(x[1])
+)
 
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-with col_m1:
-    st.metric("🔴 Live Spot Price", f"${live_price:,.{dec}f}", f"{d_change:+.2f}%")
-with col_m2:
-    st.metric("📈 24h High", f"${d_high:,.{dec}f}")
-with col_m3:
-    st.metric("📉 24h Low", f"${d_low:,.{dec}f}")
-with col_m4:
-    st.markdown(f"""
-    <div class='blue-limit-radar'>
-        🔷 SELL WALL (SHURU → AAKHIR)<br>
-        <span style='font-size:1.1rem;color:white;'>${true_sell_start:,.{dec}f} → ${true_sell_end:,.{dec}f}</span>
-    </div>
-    """, unsafe_allow_html=True)
+largest_ask = max(
+    asks_raw,
+    key=lambda x: float(x[1])
+)
 
-# ====================== 3-BRAIN PANEL ======================
-st.markdown("### 🧠 SATELLITE 3-BRAIN INTEGRATION")
-col_b1, col_b2, col_b3 = st.columns(3)
-with col_b1:
-    st.markdown(f"<div class='terminal-card'><b>🎯 AI 1: BIT-NOTE</b><br><span style='color:#00ff88;font-size:1.1rem;'>BUY FLOOR → ${true_buy_floor:,.{dec}f}</span></div>", unsafe_allow_html=True)
-with col_b2:
-    st.markdown(f"<div class='terminal-card'><b>🛰️ AI 2: BIT-GLASS</b><br><span style='color:#ff4b4b;font-size:1.1rem;'>SELL RADAR ACTIVE</span></div>", unsafe_allow_html=True)
-with col_b3:
-    st.markdown(f"<div class='terminal-card'><b>🏛️ AI 3: BLACKROCK VAULT</b><br><span style='color:#ff9b05;font-size:1.1rem;'>30-DAY ARCHIVE SYNC</span></div>", unsafe_allow_html=True)
+buy_wall_price = float(largest_bid[0])
+buy_wall_qty = float(largest_bid[1])
+
+sell_wall_price = float(largest_ask[0])
+sell_wall_qty = float(largest_ask[1])
+
+# =========================================================
+# 📈 VOLUME PRESSURE
+# =========================================================
+
+total_bid_volume = sum(
+    float(x[1]) for x in bids_raw
+)
+
+total_ask_volume = sum(
+    float(x[1]) for x in asks_raw
+)
+
+# =========================================================
+# 🚨 AI SIGNAL ENGINE
+# =========================================================
+
+signal = "NEUTRAL"
+
+if total_bid_volume > total_ask_volume * 1.5:
+    signal = "🟩 WHALE BUY PRESSURE"
+
+elif total_ask_volume > total_bid_volume * 1.5:
+    signal = "🟥 HEAVY SELL PRESSURE"
+
+else:
+    signal = "🟨 SIDEWAYS ACCUMULATION"
+
+# =========================================================
+# 📊 HEADER
+# =========================================================
+
+st.title(f"🏛️ H32 SMART MONEY RADAR — {selected_asset}/USDT")
+
+# =========================================================
+# 📌 METRICS
+# =========================================================
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric(
+        "🔴 LIVE PRICE",
+        f"${live_price:,.2f}",
+        f"{change_percent:+.2f}%"
+    )
+
+with col2:
+    st.metric(
+        "📈 24H HIGH",
+        f"${high_price:,.2f}"
+    )
+
+with col3:
+    st.metric(
+        "📉 24H LOW",
+        f"${low_price:,.2f}"
+    )
+
+with col4:
+    st.metric(
+        "🧠 MARKET SIGNAL",
+        signal
+    )
 
 st.write("---")
 
-# ====================== SIMULATED INSTITUTIONAL DATA ======================
-exchanges = ["Binance Core Book", "Coinbase Prime", "OKX Liquidity", "Bybit Institutional", "Upbit Whale Vault"]
-desks = ["0xBlackRock_Aladdin..8812", "0xFidelity..4221", "0xMicroStrategy..1102", "0xGrayscale..5590", "0xAbuDhabi..3012"]
+# =========================================================
+# 🟩 BUY / SELL RADAR
+# =========================================================
 
-np.random.seed(int(time.time() * 1000) % 10000)
+left, right = st.columns(2)
 
-for i in range(len(desks)):
-    offset_days = np.random.randint(0, 29)
-    sim_date = now_time - timedelta(days=offset_days, hours=i*4, minutes=i*15)
-    ts_str = sim_date.strftime("%Y-%m-%d %H:%M:%S")
+with left:
 
-    # Buy Simulation
-    buy_level = true_buy_floor * (1 - i * 0.0015)
-    cash_buy = 52_000_000 + i * 4_800_000
-    qty_buy = cash_buy / buy_level
+    st.markdown("""
+    <div class="buy-box">
+    """, unsafe_allow_html=True)
 
-    st.session_state.persistent_buy_vault_30d.append({
-        "Timestamp Log": ts_str,
-        "Exchange": exchanges[i],
-        "Whale Desk": desks[i],
-        "Price": f"${buy_level:,.{dec}f}",
-        "Qty": f"{qty_buy:,.2f} {selected_asset}",
-        "Capital": format_cash(cash_buy),
-        "RawTime": sim_date,
-        "Type": "BUY"
-    })
+    st.subheader("🟩 WHALE BUY WALL")
 
-    # Sell Simulation
-    step = i / max(1, len(desks)-1)
-    sell_level = true_sell_start + step * (true_sell_end - true_sell_start)
-    cash_sell = 39_000_000 + i * 7_800_000
-    qty_sell = cash_sell / sell_level
+    st.markdown(
+        f"<div class='big-text'>LIMIT ENTRY: ${buy_wall_price:,.2f}</div>",
+        unsafe_allow_html=True
+    )
 
-    st.session_state.persistent_sell_vault_30d.append({
-        "Timestamp Log": ts_str,
-        "Exchange": exchanges[(i+2)%5],
-        "Whale Desk": desks[(i+3)%5],
-        "Price": f"${sell_level:,.{dec}f}",
-        "Qty": f"{qty_sell:,.2f} {selected_asset}",
-        "Capital": format_cash(cash_sell),
-        "RawTime": sim_date,
-        "Type": "SELL"
-    })
+    st.write(f"📦 Whale Quantity: {buy_wall_qty:,.2f}")
 
-# Cleanup older than 30 days
-cutoff = now_time - timedelta(days=30)
-st.session_state.persistent_buy_vault_30d = [x for x in st.session_state.persistent_buy_vault_30d if x["RawTime"] >= cutoff]
-st.session_state.persistent_sell_vault_30d = [x for x in st.session_state.persistent_sell_vault_30d if x["RawTime"] >= cutoff]
+    st.write("🎯 Smart money accumulation detected.")
 
-# ====================== DISPLAY VAULTS ======================
-col_left, col_right = st.columns(2)
-
-with col_left:
-    st.markdown("<div class='split-box-inflow'><div style='color:#00ff88;font-weight:bold;text-align:center;'>🟩 AI 1: BUYING VAULT (Accumulation)</div>", unsafe_allow_html=True)
-    df_buy = pd.DataFrame(st.session_state.persistent_buy_vault_30d[-7:]).drop(columns=["RawTime", "Type"], errors='ignore')
-    st.dataframe(df_buy, use_container_width=True, hide_index=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-with col_right:
-    st.markdown("<div class='split-box-outflow'><div style='color:#ff4b4b;font-weight:bold;text-align:center;'>🟥 AI 2: SELLING VAULT (Shuru → Aakhir)</div>", unsafe_allow_html=True)
-    df_sell = pd.DataFrame(st.session_state.persistent_sell_vault_30d[-7:]).drop(columns=["RawTime", "Type"], errors='ignore')
-    st.dataframe(df_sell, use_container_width=True, hide_index=True)
+with right:
+
+    st.markdown("""
+    <div class="sell-box">
+    """, unsafe_allow_html=True)
+
+    st.subheader("🟥 WHALE SELL WALL")
+
+    st.markdown(
+        f"<div class='big-text'>SELL WALL: ${sell_wall_price:,.2f}</div>",
+        unsafe_allow_html=True
+    )
+
+    st.write(f"📦 Whale Quantity: {sell_wall_qty:,.2f}")
+
+    st.write("⚠️ Distribution zone detected.")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Auto Refresh
-st.components.v1.html(f"""
-<script>
-    setTimeout(() => location.reload(), {refresh_rate * 1000});
-</script>
-""", height=0)
+st.write("---")
 
-st.caption("H32 GLOBAL RADAR V58 • Deep Horizon Scanner • Optimized & Accelerated")
+# =========================================================
+# 🧠 MARKET PRESSURE ENGINE
+# =========================================================
+
+st.markdown("""
+<div class="signal-box">
+""", unsafe_allow_html=True)
+
+st.subheader("🛰️ INSTITUTIONAL PRESSURE ANALYSIS")
+
+st.write(f"🟩 Total Bid Volume: {total_bid_volume:,.2f}")
+st.write(f"🟥 Total Ask Volume: {total_ask_volume:,.2f}")
+
+if signal == "🟩 WHALE BUY PRESSURE":
+
+    st.success("""
+    Buyers aggressively absorbing liquidity.
+    Breakout probability increasing.
+    """)
+
+elif signal == "🟥 HEAVY SELL PRESSURE":
+
+    st.error("""
+    Sellers dominating orderbook.
+    Dump risk elevated.
+    """)
+
+else:
+
+    st.warning("""
+    Market in accumulation range.
+    No major breakout confirmed.
+    """)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# =========================================================
+# 📚 ORDERBOOK TABLES
+# =========================================================
+
+buy_df = pd.DataFrame(
+    bids_raw[:15],
+    columns=["Price", "Quantity"]
+)
+
+sell_df = pd.DataFrame(
+    asks_raw[:15],
+    columns=["Price", "Quantity"]
+)
+
+buy_df["Price"] = buy_df["Price"].astype(float)
+buy_df["Quantity"] = buy_df["Quantity"].astype(float)
+
+sell_df["Price"] = sell_df["Price"].astype(float)
+sell_df["Quantity"] = sell_df["Quantity"].astype(float)
+
+# =========================================================
+# 📊 DISPLAY TABLES
+# =========================================================
+
+col_a, col_b = st.columns(2)
+
+with col_a:
+
+    st.subheader("🟩 TOP BUY LIMIT ORDERS")
+
+    st.dataframe(
+        buy_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+with col_b:
+
+    st.subheader("🟥 TOP SELL LIMIT ORDERS")
+
+    st.dataframe(
+        sell_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+# =========================================================
+# 🧠 LIVE STATUS
+# =========================================================
+
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+st.write("---")
+
+st.caption(f"""
+H32 GLOBAL SMART MONEY RADAR ACTIVE  
+🛰️ Live Binance Orderbook Sync  
+🕒 {current_time}
+""")
