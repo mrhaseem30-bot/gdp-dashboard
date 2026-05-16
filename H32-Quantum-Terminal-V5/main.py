@@ -1,12 +1,10 @@
 import streamlit as st
 import requests
 import pandas as pd
-import numpy as np
 from datetime import datetime
-from streamlit_autorefresh import st_autorefresh
 
 # =========================================================
-# 🏛️ H32 INSTITUTIONAL SMART MONEY RADAR
+# 🏛️ H32 SMART MONEY RADAR
 # =========================================================
 
 st.set_page_config(
@@ -15,14 +13,20 @@ st.set_page_config(
 )
 
 # =========================================================
-# 🔄 AUTO REFRESH
+# 🔄 BUILT-IN AUTO REFRESH
 # =========================================================
 
 refresh_seconds = 3
 
-st_autorefresh(
-    interval=refresh_seconds * 1000,
-    key="h32_radar_refresh"
+st.markdown(
+    f"""
+    <script>
+        setTimeout(function(){{
+            window.location.reload();
+        }}, {refresh_seconds * 1000});
+    </script>
+    """,
+    unsafe_allow_html=True
 )
 
 # =========================================================
@@ -47,14 +51,6 @@ st.markdown("""
 
 h1,h2,h3{
     color:white;
-}
-
-.radar-box{
-    background:#08111d;
-    border:1px solid #1b2b45;
-    border-radius:10px;
-    padding:12px;
-    margin-bottom:8px;
 }
 
 .buy-box{
@@ -125,7 +121,6 @@ session = requests.Session()
 # =========================================================
 
 @st.cache_data(ttl=2)
-
 def fetch_market_data(symbol):
 
     try:
@@ -219,16 +214,13 @@ total_ask_volume = sum(
 # 🚨 AI SIGNAL ENGINE
 # =========================================================
 
-signal = "NEUTRAL"
+signal = "🟨 SIDEWAYS"
 
 if total_bid_volume > total_ask_volume * 1.5:
     signal = "🟩 WHALE BUY PRESSURE"
 
 elif total_ask_volume > total_bid_volume * 1.5:
     signal = "🟥 HEAVY SELL PRESSURE"
-
-else:
-    signal = "🟨 SIDEWAYS ACCUMULATION"
 
 # =========================================================
 # 📊 HEADER
@@ -263,51 +255,47 @@ with col3:
 
 with col4:
     st.metric(
-        "🧠 MARKET SIGNAL",
+        "🧠 AI SIGNAL",
         signal
     )
 
 st.write("---")
 
 # =========================================================
-# 🟩 BUY / SELL RADAR
+# 🟩 BUY / SELL WALLS
 # =========================================================
 
 left, right = st.columns(2)
 
 with left:
 
-    st.markdown("""
-    <div class="buy-box">
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='buy-box'>", unsafe_allow_html=True)
 
-    st.subheader("🟩 WHALE BUY WALL")
+    st.subheader("🟩 WHALE BUY ENTRY")
 
     st.markdown(
-        f"<div class='big-text'>LIMIT ENTRY: ${buy_wall_price:,.2f}</div>",
+        f"<div class='big-text'>${buy_wall_price:,.2f}</div>",
         unsafe_allow_html=True
     )
 
-    st.write(f"📦 Whale Quantity: {buy_wall_qty:,.2f}")
+    st.write(f"📦 Buy Quantity: {buy_wall_qty:,.2f}")
 
-    st.write("🎯 Smart money accumulation detected.")
+    st.write("🎯 Large limit buyers detected.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right:
 
-    st.markdown("""
-    <div class="sell-box">
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='sell-box'>", unsafe_allow_html=True)
 
     st.subheader("🟥 WHALE SELL WALL")
 
     st.markdown(
-        f"<div class='big-text'>SELL WALL: ${sell_wall_price:,.2f}</div>",
+        f"<div class='big-text'>${sell_wall_price:,.2f}</div>",
         unsafe_allow_html=True
     )
 
-    st.write(f"📦 Whale Quantity: {sell_wall_qty:,.2f}")
+    st.write(f"📦 Sell Quantity: {sell_wall_qty:,.2f}")
 
     st.write("⚠️ Distribution zone detected.")
 
@@ -316,12 +304,10 @@ with right:
 st.write("---")
 
 # =========================================================
-# 🧠 MARKET PRESSURE ENGINE
+# 🛰️ PRESSURE ANALYSIS
 # =========================================================
 
-st.markdown("""
-<div class="signal-box">
-""", unsafe_allow_html=True)
+st.markdown("<div class='signal-box'>", unsafe_allow_html=True)
 
 st.subheader("🛰️ INSTITUTIONAL PRESSURE ANALYSIS")
 
@@ -330,24 +316,15 @@ st.write(f"🟥 Total Ask Volume: {total_ask_volume:,.2f}")
 
 if signal == "🟩 WHALE BUY PRESSURE":
 
-    st.success("""
-    Buyers aggressively absorbing liquidity.
-    Breakout probability increasing.
-    """)
+    st.success("Buyers dominating orderbook. Breakout possible.")
 
 elif signal == "🟥 HEAVY SELL PRESSURE":
 
-    st.error("""
-    Sellers dominating orderbook.
-    Dump risk elevated.
-    """)
+    st.error("Sellers dominating orderbook. Dump risk elevated.")
 
 else:
 
-    st.warning("""
-    Market in accumulation range.
-    No major breakout confirmed.
-    """)
+    st.warning("Market neutral. Accumulation phase.")
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -398,7 +375,7 @@ with col_b:
     )
 
 # =========================================================
-# 🧠 LIVE STATUS
+# 🕒 FOOTER
 # =========================================================
 
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -406,7 +383,7 @@ current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 st.write("---")
 
 st.caption(f"""
-H32 GLOBAL SMART MONEY RADAR ACTIVE  
-🛰️ Live Binance Orderbook Sync  
+🏛️ H32 GLOBAL SMART MONEY RADAR ACTIVE  
+🛰️ Live Binance Orderbook Connected  
 🕒 {current_time}
 """)
