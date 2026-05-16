@@ -2,208 +2,215 @@ import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
-import time
 from datetime import datetime, timedelta
+import time
 
-# --- 🛰️ SATELLITE CORE SYSTEM SETUP (V57 EXTENDED RADAR HORIZON) ---
-st.set_page_config(page_title="H32 GLOBAL RADAR V57", layout="wide")
+# ====================== CONFIG ======================
+st.set_page_config(page_title="H32 GLOBAL RADAR V58", layout="wide", initial_sidebar_state="expanded")
 
-# Persistent 30-Day Multi-Exchange Data Vaults
+# Persistent 30-day Vaults
 if "persistent_buy_vault_30d" not in st.session_state:
     st.session_state.persistent_buy_vault_30d = []
-
 if "persistent_sell_vault_30d" not in st.session_state:
     st.session_state.persistent_sell_vault_30d = []
 
-# Force Viewport to stay completely top on fast execution loops
+# ====================== STYLING ======================
 st.markdown("""
-    <script>window.parent.document.querySelector('section.main').scrollTo(0, 0);</script>
-""", unsafe_allow_html=True)
-
-# --- 🎨 ALADDIN COMPACT INTERFACE DESIGN STYLE ---
-st.markdown("""
-    <style>
-    .stApp { background: linear-gradient(135deg, #02040a, #050a14) !important; }
-    .main { color: #f0f6fc; font-family: 'Inter', sans-serif; padding: 4px !important; }
+<style>
+    .stApp { background: linear-gradient(135deg, #020409, #050a14); color: #f0f6fc; }
+    .main { padding: 8px !important; }
+    h2, h3 { margin: 4px 0 !important; font-weight: 800; }
     
-    html, body, [data-testid="stMarkdownContainer"] p {
-        font-size: 0.82rem !important;
-        line-height: 1.2 !important;
-    }
-    h2, h3 { 
-        font-size: 1.05rem !important; 
-        margin-top: 3px !important; 
-        margin-bottom: 3px !important; 
-        font-weight: 800 !important;
-        color: #ffffff;
-    }
-    
-    /* Optimized Premium Blue Radar Box for Extended Horizon */
     .blue-limit-radar {
-        background: linear-gradient(145deg, #06162b, #0a2244);
-        border: 2px solid #3385ff;
+        background: linear-gradient(145deg, #051429, #092347);
+        border: 2px solid #0052cc;
         border-radius: 8px;
-        padding: 10px !important;
+        padding: 12px;
         text-align: center;
         font-weight: bold;
         color: #3385ff;
-        margin-bottom: 8px !important;
-        box-shadow: 0 0 15px rgba(51, 133, 255, 0.25);
+        box-shadow: 0 0 20px rgba(0, 82, 204, 0.4);
     }
     
-    .terminal-card { background-color: #080d16; border: 1px solid #162235; border-radius: 6px; padding: 10px; text-align: center; }
-    .brain-title { font-size: 0.78rem; font-weight: bold; color: #8b949e; }
-    .brain-status { font-size: 0.9rem; font-weight: 800; margin-top: 2px; }
+    .terminal-card {
+        background-color: #080d16;
+        border: 1px solid #162235;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+    .split-box-inflow { background: linear-gradient(145deg, #041a10, #082618); border: 1px solid #00ff88; border-radius: 8px; padding: 12px; }
+    .split-box-outflow { background: linear-gradient(145deg, #200a0c, #301013); border: 1px solid #ff4b4b; border-radius: 8px; padding: 12px; }
     
-    .split-box-inflow { background: linear-gradient(145deg, #041a10, #082618); border: 1px solid #00ff88; border-radius: 6px; padding: 10px !important; margin-bottom: 4px !important;}
-    .split-box-outflow { background: linear-gradient(145deg, #200a0c, #301013); border: 1px solid #ff4b4b; border-radius: 6px; padding: 10px !important; margin-bottom: 4px !important;}
-    .split-title { font-size: 0.85rem !important; font-weight: bold; text-align: center; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    
-    [data-testid="stMetricValue"] { font-size: 1.05rem !important; font-weight: bold !important; }
-    [data-testid="stMetricLabel"] { font-size: 0.7rem !important; }
-    .stDataFrame div { font-size: 0.65rem !important; }
-    div[data-testid="stHorizontalBlock"] { gap: 4px !important; padding: 0px !important; }
-    </style>
-    """, unsafe_allow_html=True)
+    .stMetricValue { font-size: 1.1rem !important; font-weight: bold; }
+    .stDataFrame { font-size: 0.78rem; }
+</style>
+""", unsafe_allow_html=True)
 
-def format_institutional_cash(val):
-    if abs(val) >= 1_000_000_000: return f"${val / 1_000_000_000:.3f}B"
-    elif abs(val) >= 1_000_000: return f"${val / 1_000_000:.2f}M"
-    return f"${val:,.2f}"
+def format_cash(val):
+    if abs(val) >= 1_000_000_000:
+        return f"${val/1e9:.3f}B"
+    elif abs(val) >= 1_000_000:
+        return f"${val/1e6:.2f}M"
+    return f"${val:,.0f}"
 
-# --- ⚡ PIPELINE LIQUIDITY INJECTOR ENGINE (REAL MATRIX) ---
-@st.cache_data(ttl=1)
-def fetch_extended_global_depth(ticker):
+# ====================== DATA FETCH ======================
+@st.cache_data(ttl=2)
+def fetch_market_data(ticker):
     try:
-        res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={ticker}USDT", timeout=1.2).json()
-        current_spot = float(res['price'])
-        
-        depth = requests.get(f"https://api.binance.com/api/v3/depth?symbol={ticker}USDT&limit=20", timeout=1.2).json()
-        bids_vol = sum(float(b[1]) for b in depth['bids'])
-        asks_vol = sum(float(a[1]) for a in depth['asks'])
-        
-        stats = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={ticker}USDT", timeout=1.2).json()
-        return current_spot, float(stats['highPrice']), float(stats['lowPrice']), float(stats['priceChangePercent']), bids_vol, asks_vol
+        price_res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={ticker}USDT", timeout=1.5).json()
+        depth = requests.get(f"https://api.binance.com/api/v3/depth?symbol={ticker}USDT&limit=50", timeout=1.5).json()
+        stats = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={ticker}USDT", timeout=1.5).json()
+
+        current = float(price_res['price'])
+        high = float(stats['highPrice'])
+        low = float(stats['lowPrice'])
+        change = float(stats['priceChangePercent'])
+
+        bids = depth['bids']
+        asks = depth['asks']
+
+        return {
+            "price": current,
+            "high": high,
+            "low": low,
+            "change": change,
+            "buy_floor": float(bids[0][0]),
+            "sell_start": float(asks[0][0]),
+            "sell_end": float(asks[-1][0])
+        }
     except:
-        return 2194.21, 2350.00, 2110.50, -3.20, 55000.0, 51000.0
+        # Fallback
+        fallback_data = {
+            "ETH": {"price": 2194.21, "high": 2350, "low": 2110.5, "change": -3.2, "buy_floor": 2150, "sell_start": 2210, "sell_end": 2450},
+            "BTC": {"price": 68250, "high": 69500, "low": 67000, "change": 1.2, "buy_floor": 67500, "sell_start": 69000, "sell_end": 72000}
+        }.get(ticker, {"price": 1.0, "high": 1.1, "low": 0.9, "change": 0, "buy_floor": 0.95, "sell_start": 1.0, "sell_end": 1.1})
+        return fallback_data
 
-# --- CONTROL INTERFACE PANEL ---
-st.sidebar.markdown("### 🏛️ MATRIX TELEMETRY CONFIG V57")
-watchlist = ["ETH", "BTC", "DOT", "SHIB", "BONE", "SOL"]
-selected_asset = st.sidebar.selectbox("📂 QUANT DATA STREAM WATCH", watchlist)
-refresh_rate = st.sidebar.slider("Network Aggregator Ping Speed", min_value=1, max_value=5, value=1)
+# ====================== SIDEBAR ======================
+st.sidebar.markdown("### 🏛️ HORIZON ENGINE CONTROLS V58")
+watchlist = ["ETH", "BTC", "SOL", "DOT", "SHIB", "BONE"]
+selected_asset = st.sidebar.selectbox("📂 SELECT ASSET", watchlist)
+refresh_rate = st.sidebar.slider("🔄 Sync Pulse Speed (sec)", 1, 5, 2)
 
-# Stream Live Market Metrics
-live_price, d_high, d_low, d_change, aggregated_bids, aggregated_asks = fetch_extended_global_depth(selected_asset)
+# ====================== LIVE DATA ======================
+data = fetch_market_data(selected_asset)
+live_price = data["price"]
+d_high = data["high"]
+d_low = data["low"]
+d_change = data["change"]
+true_buy_floor = data["buy_floor"]
+true_sell_start = data["sell_start"]
+true_sell_end = data["sell_end"]
+
+# ETH special override (as per original)
+if selected_asset == "ETH":
+    true_buy_floor = 2150.00
+    true_sell_start = 2210.00
+    true_sell_end = 2450.00
+
 dec = 6 if live_price < 0.1 else 2
 now_time = datetime.now()
 
-# --- 🎯 INDEPENDENT FLOORS AND EXTENDED SELLING HORIZONS ---
-if selected_asset == "ETH":
-    independent_buy_floor = 2150.00    # Hard core accumulation baseline
-    base_sell_radar_limit = 2380.50    # First main ceiling block
-    extended_max_horizon = 2550.00     # Order blocks range extended beyond current matrix boundary
-else:
-    independent_buy_floor = live_price * 0.975
-    base_sell_radar_limit = live_price * 1.045
-    extended_max_horizon = live_price * 1.090
+# ====================== UI ======================
+st.markdown(f"<h2>🏛:// ALADDIN QUANTUM NERVE CENTER — {selected_asset}/USDT</h2>", unsafe_allow_html=True)
 
-# --- 🧠 3-BRAIN SATELLITE ARCHITECTURE CONTROL ---
-st.markdown("### 🧠 SATELLITE 3-BRAIN INTEGRATION PANEL")
+col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+with col_m1:
+    st.metric("🔴 Live Spot Price", f"${live_price:,.{dec}f}", f"{d_change:+.2f}%")
+with col_m2:
+    st.metric("📈 24h High", f"${d_high:,.{dec}f}")
+with col_m3:
+    st.metric("📉 24h Low", f"${d_low:,.{dec}f}")
+with col_m4:
+    st.markdown(f"""
+    <div class='blue-limit-radar'>
+        🔷 SELL WALL (SHURU → AAKHIR)<br>
+        <span style='font-size:1.1rem;color:white;'>${true_sell_start:,.{dec}f} → ${true_sell_end:,.{dec}f}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ====================== 3-BRAIN PANEL ======================
+st.markdown("### 🧠 SATELLITE 3-BRAIN INTEGRATION")
 col_b1, col_b2, col_b3 = st.columns(3)
 with col_b1:
-    st.markdown(f"<div class='terminal-card'><div class='brain-title'>🎯 AI 1: BIT-NOTE (BUY MANAGER)</div><div class='brain-status' style='color:#00ff88;'>🟩 LIVE SUPPORT FLOOR: ${independent_buy_floor:,.2f}</div></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='terminal-card'><b>🎯 AI 1: BIT-NOTE</b><br><span style='color:#00ff88;font-size:1.1rem;'>BUY FLOOR → ${true_buy_floor:,.{dec}f}</span></div>", unsafe_allow_html=True)
 with col_b2:
-    st.markdown(f"<div class='terminal-card'><div class='brain-title'>🛰️ AI 2: BIT-GLASS (SELL RADAR)</div><div class='brain-status' style='color:#ff4b4b;'>🟥 MAX SELLING RANGE EXTENDED UPTO: ${extended_max_horizon:,.2f}</div></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='terminal-card'><b>🛰️ AI 2: BIT-GLASS</b><br><span style='color:#ff4b4b;font-size:1.1rem;'>SELL RADAR ACTIVE</span></div>", unsafe_allow_html=True)
 with col_b3:
-    st.markdown("<div class='terminal-card'><div class='brain-title'>🏛️ AI 3: BLACKROCK VAULT CORE</div><div class='brain-status' style='color:#ff9b05;'>🟨 SYSTEM ARCHIVE: 1-MONTH PERSISTENT SYNC</div></div>", unsafe_allow_html=True)
-
-st.markdown(f"<h2>🏛:// ALADDIN QUANTUM NERVE CENTER: {selected_asset}/USDT</h2>", unsafe_allow_html=True)
-
-# --- 📊 HEADERS METRICS MATRIX ROW INJECTED WITH RADAR STATUS BOX ---
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-with col_m1: 
-    st.metric(label="🔴 Live Real Spot Bill Price", value=f"${live_price:,.{dec}f}", delta=f"{d_change:+.2f}%")
-with col_m2: 
-    st.metric(label="📊 24h Consolidated High", value=f"${d_high:,.{dec}f}")
-with col_m3: 
-    st.metric(label="📊 24h Consolidated Low", value=f"${d_low:,.{dec}f}")
-with col_m4:
-    # Upgraded Blue Tracker Interface box tracing exactly how far the order extends
-    st.markdown(f"<div class='blue-limit-radar'>🔷 SELLING EXTENSION HORIZON<br><span style='font-size:1.1rem; color:white;'>${base_sell_radar_limit:,.{dec}f} ➔ ${extended_max_horizon:,.{dec}f}</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='terminal-card'><b>🏛️ AI 3: BLACKROCK VAULT</b><br><span style='color:#ff9b05;font-size:1.1rem;'>30-DAY ARCHIVE SYNC</span></div>", unsafe_allow_html=True)
 
 st.write("---")
 
-# --- 💾 GENERATE AND SYNC HISTORICAL MULTI-EXCHANGE ARRAYS ---
-exchanges = ["Binance Core Book", "Coinbase Prime Desk", "OKX Liquidity Core", "Bybit Institutional Node", "Upbit Whale Vault"]
-desks = ["0xBlackRock_Aladdin..8812", "0xFidelity_Digital..4221", "0xMicroStrategy_Corp..1102", "0xGrayscale_Trust..5590", "0xAbuDhabi_Sovereign..3012"]
+# ====================== SIMULATED INSTITUTIONAL DATA ======================
+exchanges = ["Binance Core Book", "Coinbase Prime", "OKX Liquidity", "Bybit Institutional", "Upbit Whale Vault"]
+desks = ["0xBlackRock_Aladdin..8812", "0xFidelity..4221", "0xMicroStrategy..1102", "0xGrayscale..5590", "0xAbuDhabi..3012"]
 
-np.random.seed(int(time.time()))
+np.random.seed(int(time.time() * 1000) % 10000)
+
 for i in range(len(desks)):
     offset_days = np.random.randint(0, 29)
-    sim_date = now_time - timedelta(days=offset_days, hours=i*6, minutes=i*14)
-    timestamp_string = sim_date.strftime("%Y-%m-%d %H:%M:%S")
-    
-    # AI 1 Accumulation Processing Injections
-    buy_level = independent_buy_floor - (i * (live_price * 0.002))
-    cash_buy = 48_000_000.0 + (i * 5_500_000.0)
-    qty_bought = cash_buy / buy_level
-    
+    sim_date = now_time - timedelta(days=offset_days, hours=i*4, minutes=i*15)
+    ts_str = sim_date.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Buy Simulation
+    buy_level = true_buy_floor * (1 - i * 0.0015)
+    cash_buy = 52_000_000 + i * 4_800_000
+    qty_buy = cash_buy / buy_level
+
     st.session_state.persistent_buy_vault_30d.append({
-        "Timestamp Log": timestamp_string,
-        "Exchange Platform": exchanges[i],
-        "Whale Desk Register": desks[i],
-        "Execution Level Price": f"${buy_level:,.{dec}f}",
-        "Quantity Bought Token": f"{qty_bought:,.2f} {selected_asset}",
-        "Inventory Capital": format_institutional_cash(cash_buy),
-        "RawTime": sim_date
+        "Timestamp Log": ts_str,
+        "Exchange": exchanges[i],
+        "Whale Desk": desks[i],
+        "Price": f"${buy_level:,.{dec}f}",
+        "Qty": f"{qty_buy:,.2f} {selected_asset}",
+        "Capital": format_cash(cash_buy),
+        "RawTime": sim_date,
+        "Type": "BUY"
     })
-    
-    # AI 2 Extended Horizon Distribution Grid Injections (Tracing higher layers)
-    spread_factor = i / (len(desks) - 1)
-    sell_level_step = base_sell_radar_limit + (spread_factor * (extended_max_horizon - base_sell_radar_limit))
-    cash_sell = 36_000_000.0 + (i * 8_200_000.0)
-    qty_sold = cash_sell / sell_level_step
-    
+
+    # Sell Simulation
+    step = i / max(1, len(desks)-1)
+    sell_level = true_sell_start + step * (true_sell_end - true_sell_start)
+    cash_sell = 39_000_000 + i * 7_800_000
+    qty_sell = cash_sell / sell_level
+
     st.session_state.persistent_sell_vault_30d.append({
-        "Timestamp Log": timestamp_string,
-        "Exchange Platform": exchanges[(i+3)%5],
-        "Whale Desk Register": desks[(i+1)%5],
-        "Execution Level Price": f"${sell_level_step:,.{dec}f}",
-        "Quantity Sold Token": f"{qty_sold:,.2f} {selected_asset}",
-        "Inventory Capital": format_institutional_cash(cash_sell),
-        "RawTime": sim_date
+        "Timestamp Log": ts_str,
+        "Exchange": exchanges[(i+2)%5],
+        "Whale Desk": desks[(i+3)%5],
+        "Price": f"${sell_level:,.{dec}f}",
+        "Qty": f"{qty_sell:,.2f} {selected_asset}",
+        "Capital": format_cash(cash_sell),
+        "RawTime": sim_date,
+        "Type": "SELL"
     })
 
-# Rolling 30-Day Storage Lock Verification Engine Purge
-one_month_limit_bar = now_time - timedelta(days=30)
+# Cleanup older than 30 days
+cutoff = now_time - timedelta(days=30)
+st.session_state.persistent_buy_vault_30d = [x for x in st.session_state.persistent_buy_vault_30d if x["RawTime"] >= cutoff]
+st.session_state.persistent_sell_vault_30d = [x for x in st.session_state.persistent_sell_vault_30d if x["RawTime"] >= cutoff]
 
-clean_buys = {e["Whale Desk Register"] + e["Timestamp Log"]: e for e in st.session_state.persistent_buy_vault_30d if e["RawTime"] >= one_month_limit_bar}
-st.session_state.persistent_buy_vault_30d = list(clean_buys.values())
+# ====================== DISPLAY VAULTS ======================
+col_left, col_right = st.columns(2)
 
-clean_sells = {e["Whale Desk Register"] + e["Timestamp Log"]: e for e in st.session_state.persistent_sell_vault_30d if e["RawTime"] >= one_month_limit_bar}
-st.session_state.persistent_sell_vault_30d = list(clean_sells.values())
-
-# --- 📊 PHASE 2: DUAL SEPARATED VALUATION MATRIX SHEETS ---
-col_left_panel, col_right_panel = st.columns(2)
-
-with col_left_panel:
-    st.markdown("<div class='split-box-inflow'><div class='split-title' style='color: #00ff88;'>🟩 AI 1: SEPARATED REAL-TIME BUYING VAULT (Token Accumulation Layer)</div>", unsafe_allow_html=True)
-    df_buys = pd.DataFrame(st.session_state.persistent_buy_vault_30d[-6:])
-    if not df_buys.empty:
-        st.dataframe(df_buys.drop(columns=["RawTime"]), use_container_width=True, hide_index=True)
+with col_left:
+    st.markdown("<div class='split-box-inflow'><div style='color:#00ff88;font-weight:bold;text-align:center;'>🟩 AI 1: BUYING VAULT (Accumulation)</div>", unsafe_allow_html=True)
+    df_buy = pd.DataFrame(st.session_state.persistent_buy_vault_30d[-7:]).drop(columns=["RawTime", "Type"], errors='ignore')
+    st.dataframe(df_buy, use_container_width=True, hide_index=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-with col_right_panel:
-    st.markdown("<div class='split-box-outflow'><div class='split-title' style='color: #ff4b4b;'>🟥 AI 2: SEPARATED REAL-TIME SELLING VAULT (Extended Horizon Distribution Layers)</div>", unsafe_allow_html=True)
-    df_sells = pd.DataFrame(st.session_state.persistent_sell_vault_30d[-6:])
-    if not df_sells.empty:
-        st.dataframe(df_sells.drop(columns=["RawTime"]), use_container_width=True, hide_index=True)
+with col_right:
+    st.markdown("<div class='split-box-outflow'><div style='color:#ff4b4b;font-weight:bold;text-align:center;'>🟥 AI 2: SELLING VAULT (Shuru → Aakhir)</div>", unsafe_allow_html=True)
+    df_sell = pd.DataFrame(st.session_state.persistent_sell_vault_30d[-7:]).drop(columns=["RawTime", "Type"], errors='ignore')
+    st.dataframe(df_sell, use_container_width=True, hide_index=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# HIGH SPEED TIME CONTROLLER REFRESH LOOP
+# Auto Refresh
 st.components.v1.html(f"""
-    <script>
-        setTimeout(function(){{ window.parent.document.querySelector('section.main').dispatchEvent(new Event('change')); }}, {refresh_rate * 1000});
-    </script>
+<script>
+    setTimeout(() => location.reload(), {refresh_rate * 1000});
+</script>
 """, height=0)
+
+st.caption("H32 GLOBAL RADAR V58 • Deep Horizon Scanner • Optimized & Accelerated")
