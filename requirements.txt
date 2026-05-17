@@ -1,5 +1,2 @@
-streamlit
-pandas
-numpy
-requests
-streamlit-autorefresh
+pip install streamlit pandas numpy requests
+streamlit run app.py
