@@ -1,2 +1,5 @@
-pip install streamlit pandas numpy requests
-streamlit run app.py
+streamlit
+pandas
+numpy
+yfinance
+requests
