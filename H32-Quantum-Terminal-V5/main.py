@@ -1,62 +1,43 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+import plotly.graph_objects as go
+from datetime import datetime
 
-# Page Setup
-st.set_page_config(page_title="My Trading Dashboard", layout="wide", page_icon="📊")
-st.title("🚀 My Simple Trading Dashboard")
-st.markdown("**CM Ultimate + Liquidity Pro System**")
+st.set_page_config(page_title="Trading System", layout="wide")
+st.title("📈 CM Ultimate + Liquidity Pro Trading System")
 
-# Current Time
-current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-st.write(f"**Current Time:** {current_time}")
+# Fake Chart Data (Real mein API se la sakte hain)
+df = pd.DataFrame({
+    'Date': pd.date_range('2026-05-27', periods=100),
+    'Open': [58000, 58500, 57900, 59000] * 25,
+    'High': [59000, 59500, 58500, 60000] * 25,
+    'Low': [57500, 58000, 57000, 58500] * 25,
+    'Close': [58500, 58200, 58800, 59300] * 25
+})
 
-# Asset Selector
-asset = st.selectbox("Select Asset", ["BTCUSDT", "GOLD (XAUUSD)", "ETHUSDT", "NASDAQ"])
+# Candlestick Chart
+fig = go.Figure(data=[go.Candlestick(
+    x=df['Date'],
+    open=df['Open'],
+    high=df['High'],
+    low=df['Low'],
+    close=df['Close'],
+    name="BTCUSDT"
+)])
 
-col1, col2, col3 = st.columns(3)
+fig.update_layout(title="BTCUSDT 1H Chart", xaxis_title="Time", yaxis_title="Price", height=600)
+st.plotly_chart(fig, use_container_width=True)
+
+# Indicators Status
+col1, col2 = st.columns(2)
 
 with col1:
-    st.metric("Current Price", "₹ 58,930", "-1.72%")
+    st.success("**CM Ultimate:** Blue Line crossed UP → Bullish")
+    st.info("EMA 9 > EMA 21")
 
 with col2:
-    st.metric("1H Trend", "🟢 BULLISH", "EMA 9 > EMA 21")
+    st.success("**Liquidity Pro:** Price above Green Zone")
+    st.info("Buy-side Liquidity Active")
 
-with col3:
-    st.metric("Signal", "🟢 **BUY**", "Strong")
-
-st.divider()
-
-# Main Dashboard
-st.subheader("📊 Trading Signals")
-
-colA, colB = st.columns(2)
-
-with colA:
-    st.success("**BUY SIGNAL**")
-    st.write("• CM Ultimate: Blue Line crossed up")
-    st.write("• Liquidity: Price above Green Zone")
-    st.write("• Volume: High")
-    st.write("**Entry:** Now")
-    st.write("**Stop Loss:** Not Set (as per your rule)")
-    st.write("**Target:** 1:2  |  **Time Limit:** 6 Hours")
-
-with colB:
-    st.error("**SELL SIGNAL** (Last)")
-    st.write("• CM Ultimate: Blue Line crossed down")
-    st.write("• Liquidity: Below Red Zone")
-
-st.divider()
-
-# Recent Signals
-st.subheader("📋 Recent Signals")
-data = {
-    "Time": ["10:30", "09:15", "08:00"],
-    "Signal": ["BUY", "HOLD", "SELL"],
-    "Price": ["58,930", "58,650", "59,200"],
-    "Status": ["Active", "Closed", "Closed"]
-}
-df = pd.DataFrame(data)
-st.table(df)
-
-st.caption("Made for mobile + desktop | Lag-free")
+st.metric("Signal", "🟢 STRONG BUY", "High Volume Confirmed")
+st.write("**Stop Loss:** Not Set | **Time Limit:** 6 Hours")
