@@ -2,6 +2,4 @@ streamlit
 ccxt
 pandas
 requests
-yfinance
-plotly
 gTTS
