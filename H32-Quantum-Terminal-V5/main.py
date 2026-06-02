@@ -6,8 +6,25 @@ import talib
 
 st.set_page_config(page_title="H32 Compound Trend Bot", layout="wide")
 
+# Custom CSS for glowing effect
+st.markdown("""
+<style>
+    .big-signal {
+        font-size: 32px !important;
+        font-weight: bold;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 0 15px;
+    }
+    .buy { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
+    .sell { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+    .wait { color: #ffa500; text-shadow: 0 0 8px #ffa500; }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("⚡ H32 Compound Trend Bot")
-st.subheader("SuperTrend + EMA Combined Strategy")
+st.subheader("SuperTrend + EMA Smart Strategy")
 
 # Coin Selector
 coins = {
@@ -18,77 +35,52 @@ coins = {
     "Chainlink (LINK)": "LINK-USD"
 }
 
-selected_coin = st.selectbox("Select Coin", list(coins.keys()))
+selected_coin = st.selectbox("**Select Coin**", list(coins.keys()))
 ticker = coins[selected_coin]
 
-# Sidebar
-st.sidebar.header("Strategy Settings")
-period = st.sidebar.slider("SuperTrend Period", 7, 20, 10)
-multiplier = st.sidebar.slider("SuperTrend Multiplier", 1.0, 5.0, 3.0)
+# Timeframe Selector (Bahut options)
+timeframe = st.selectbox("**Select Timeframe**", 
+    ["15 Minutes", "1 Hour", "4 Hours", "Daily"], index=1)
+
+# Settings according to timeframe
+if timeframe == "15 Minutes":
+    period, multiplier, data_period, interval = 10, 2.5, "2d", "15m"
+elif timeframe == "1 Hour":
+    period, multiplier, data_period, interval = 10, 3.0, "15d", "1h"
+elif timeframe == "4 Hours":
+    period, multiplier, data_period, interval = 11, 3.0, "30d", "4h"
+else:  # Daily
+    period, multiplier, data_period, interval = 10, 3.0, "90d", "1d"
 
 @st.cache_data(ttl=60)
-def get_data(ticker):
-    df_15m = yf.download(ticker, period="3d", interval="15m")
-    df_1h = yf.download(ticker, period="15d", interval="1h")
-    return df_15m, df_1h
+def get_data(ticker, data_period, interval):
+    return yf.download(ticker, period=data_period, interval=interval)
 
 try:
-    df_15m, df_1h = get_data(ticker)
+    df = get_data(ticker, data_period, interval)
 
-    for df in [df_15m, df_1h]:
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
 
-    live_price = float(df_15m['Close'].iloc[-1])
+    live_price = float(df['Close'].iloc[-1])
 
-    # EMA Calculation
-    df_1h['EMA20'] = talib.EMA(df_1h['Close'], timeperiod=20)
-    df_1h['EMA50'] = talib.EMA(df_1h['Close'], timeperiod=50)
+    # Indicators
+    df['EMA20'] = talib.EMA(df['Close'], timeperiod=20)
+    df['EMA50'] = talib.EMA(df['Close'], timeperiod=50)
 
-    # Simple SuperTrend (Manual)
-    hl2 = (df_1h['High'] + df_1h['Low']) / 2
-    atr = talib.ATR(df_1h['High'], df_1h['Low'], df_1h['Close'], timeperiod=period)
-    upper_band = hl2 + (multiplier * atr)
-    df_1h['SuperTrend'] = upper_band
+    hl2 = (df['High'] + df['Low']) / 2
+    atr = talib.ATR(df['High'], df['Low'], df['Close'], timeperiod=period)
+    df['SuperTrend'] = hl2 + (multiplier * atr)
 
     # Signal Logic
-    last = df_1h.iloc[-1]
-    
-    if last['EMA20'] > last['EMA50']:
+    last = df.iloc[-1]
+    ema_bull = last['EMA20'] > last['EMA50']
+    price_above_st = live_price > last['SuperTrend']
+
+    if ema_bull and price_above_st:
         signal = "🟢 STRONG BUY"
-        color = "lime"
-    elif last['EMA20'] < last['EMA50']:
+        css_class = "buy"
+        reason = "EMA Bullish + Price above SuperTrend = Strong Uptrend"
+        entry = f"Entry Zone: ${live_price:,.4f} - ${live_price*1.008:,.4f}"
+    elif not ema_bull and not price_above_st:
         signal = "🔴 STRONG SELL"
-        color = "red"
-    else:
-        signal = "⭕ WAIT"
-        color = "orange"
-
-    # UI
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric(f"{selected_coin} Price", f"${live_price:,.4f}")
-    with col2:
-        st.markdown(f"**Signal:** <span style='color:{color}; font-size:28px; font-weight:bold;'>{signal}</span>", unsafe_allow_html=True)
-
-    # Chart
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df_1h.index,
-                                 open=df_1h['Open'],
-                                 high=df_1h['High'],
-                                 low=df_1h['Low'],
-                                 close=df_1h['Close'],
-                                 name="Candlestick"))
-    
-    fig.add_trace(go.Scatter(x=df_1h.index, y=df_1h['EMA20'], 
-                           line=dict(color='orange', width=2), name="EMA 20"))
-    fig.add_trace(go.Scatter(x=df_1h.index, y=df_1h['EMA50'], 
-                           line=dict(color='blue', width=2), name="EMA 50"))
-    fig.add_trace(go.Scatter(x=df_1h.index, y=df_1h['SuperTrend'], 
-                           line=dict(color='violet', width=3), name="SuperTrend"))
-
-    fig.update_layout(height=650, template="plotly_dark", xaxis_rangeslider_visible=False)
-    st.plotly_chart(fig, use_container_width=True)
-
-except Exception as e:
-    st.error(f"Error: {str(e)}")
