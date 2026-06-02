@@ -1,5 +1,5 @@
 streamlit
-yfinance>=0.2.40
+yfinance
 pandas
-pandas_ta
-plotly>=5.0
+plotly
+ta-lib
