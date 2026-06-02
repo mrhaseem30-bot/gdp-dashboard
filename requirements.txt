@@ -1,5 +1,5 @@
 streamlit
-ccxt
+yfinance
 pandas
-requests
-gTTS
+pandas_ta
+plotly
