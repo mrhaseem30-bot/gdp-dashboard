@@ -1,117 +1,93 @@
 import streamlit as st
+import yfinance as yf
 import pandas as pd
-import requests
+import pandas_ta as ta
+import plotly.graph_objects as go
 from datetime import datetime
-from gtts import gTTS
-import io
-import streamlit.components.v1 as components
 
-# Structural configuration
-st.set_page_config(page_title="H32 QUANTUM TRADING FLOOR", layout="wide", page_icon="📈")
+st.set_page_config(page_title="H32 Compound Trend Bot", layout="wide")
+st.title("⚡ H32 Compound Trend Bot (SuperTrend + EMA)")
+st.subheader("Smart Entry + Timing System")
 
-st.title("🏛️ H32 QUANTUM FINANCIAL TRADING FLOOR")
-st.markdown("**Core Live Engine v9.7** | Real TradingView Terminal & AI Router")
-
-# ================== YOUR MASTER API CONFIG ==================
-API_CONFIG = {
-    "GROQ": "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",
-    "DEEPSEEK": "sk-61364485ea3d4fd294c407f6dfb9f766",  
+coins = {
+    "Bitcoin (BTC)": "BTC-USD",
+    "Ethereum (ETH)": "ETH-USD",
+    "Solana (SOL)": "SOL-USD",
+    "Sui (SUI)": "SUI-USD",
+    "Chainlink (LINK)": "LINK-USD"
 }
 
-# ================== QUANTUM AI ROUTER ==================
-def run_quantum_ai(prompt_text):
-    try:
-        headers = {"Authorization": f"Bearer {API_CONFIG['DEEPSEEK']}", "Content-Type": "application/json"}
-        payload = {
-            "model": "deepseek-chat",
-            "messages": [{"role": "user", "content": prompt_text}],
-            "temperature": 0.3
-        }
-        response = requests.post("https://api.deepseek.com/v1/chat/completions", json=payload, headers=headers, timeout=6)
-        return response.json()['choices'][0]['message']['content']
-    except:
-        # Groq Fallback Engine if Deepseek buffers
-        try:
-            headers = {"Authorization": f"Bearer {API_CONFIG['GROQ']}"}
-            payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": prompt_text}], "temperature": 0.3}
-            response = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers, timeout=6)
-            return response.json()['choices'][0]['message']['content']
-        except:
-            return "Institutional liquidity structure is stable. Market order flow processing."
+selected_coin = st.selectbox("Select Coin", list(coins.keys()))
+ticker = coins[selected_coin]
 
-# ================== AUDIO GENERATOR (URDU VOICE) ==================
-def generate_voice_note(text_data):
-    try:
-        tts = gTTS(text=text_data, lang='ur', slow=False)
-        audio_buf = io.BytesIO()
-        tts.write_to_fp(audio_buf)
-        audio_buf.seek(0)
-        return audio_buf
-    except:
-        return None
+st.sidebar.header("Strategy Settings")
+st_period = st.sidebar.slider("SuperTrend Period", 7, 20, 10)
+st_mult = st.sidebar.slider("SuperTrend Multiplier", 1.0, 5.0, 3.0)
 
-# ================== MASTER LAYOUT SYSTEM (2 TABS) ==================
-t1, t2 = st.tabs(["📊 LIVE TRADINGVIEW CHART", "🧠 AI INSTITUTIONAL INSIGHT"])
+@st.cache_data(ttl=60)
+def get_data(ticker):
+    df_15m = yf.download(ticker, period="3d", interval="15m")
+    df_1h = yf.download(ticker, period="15d", interval="1h")
+    return df_15m, df_1h
 
-# ---- TAB 1: ASLI TRADINGVIEW CANDLE CHART (ZERO DELAY) ----
-with t1:
-    asset_select = st.selectbox("Select Trading Asset:", ["BINANCE:BTCUSDT", "FX_IDC:XAUUSD", "BINANCE:ETHUSDT"])
-    
-    # Extract structural symbol name for widget configuration
-    symbol_name = asset_select
-    
-    st.markdown(f"### 📈 Real-Time Order Execution Chart: `{symbol_name}`")
-    
-    # Official TradingView Advanced Widget HTML Embed Code
-    tradingview_widget = f"""
-    <div class="tradingview-widget-container" style="height:550px;width:100%;">
-      <div id="tradingview_chart"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-      <script type="text/javascript">
-      new TradingView.widget({{
-        "autosize": true,
-        "symbol": "{symbol_name}",
-        "interval": "5",
-        "timezone": "Asia/Karachi",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "toolbar_bg": "#f1f3f6",
-        "enable_publishing": false,
-        "hide_side_toolbar": false,
-        "allow_symbol_change": true,
-        "container_id": "tradingview_chart"
-      }});
-      </script>
-    </div>
-    """
-    # HTML component ko interface par run karna (Perfect for mobile zoom & scaling)
-    components.html(tradingview_widget, height=560, scrolling=False)
+try:
+    df_15m, df_1h = get_data(ticker)
+    for df in [df_15m, df_1h]:
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
 
-# ---- TAB 2: QUANTUM MULTI-AI VOICE ANALYSIS ----
-with t2:
-    st.subheader("🔊 AI Voice Trading Analysis & Structural Prediction")
-    
-    if st.button("🔥 Run Multi-AI Institutional Cluster Analysis"):
-        analysis_prompt = f"""
-        Asset: {asset_select}
-        Role: Elite Senior ICT/SMC Financial Advisor.
-        Task: Give a short, high-conviction market analysis structure in Roman Urdu (2-3 lines max). 
-        Focus on where institutional liquidity pools are resting and potential directional movement.
-        """
-        
-        with st.spinner("DeepSeek Processing live network structure..."):
-            ai_verdict = run_quantum_ai(analysis_prompt)
-            
-        st.info(f"🧠 **AI Execution Narrative (Roman Urdu):** {ai_verdict}")
-        
-        # Audio rendering execution
-        audio_file = generate_voice_note(ai_verdict)
-        if audio_file:
-            st.audio(audio_file, format="audio/mp3")
+    live_price = float(df_15m['Close'].iloc[-1])
 
-# ================== CONSOLE PANEL MANAGEMENT ==================
-st.sidebar.title("🎛️ TERMINAL CONTROLS")
-st.sidebar.info("🤖 **Active Engine:** DeepSeek Multi-Router Connected")
-st.sidebar.success("📡 **Data Stream:** TradingView WebSocket Live")
-st.sidebar.caption(f"System Time: {datetime.now().strftime('%H:%M:%S PKT')}")
+    # === Indicators ===
+    df_1h['EMA20'] = ta.ema(df_1h['Close'], 20)
+    df_1h['EMA50'] = ta.ema(df_1h['Close'], 50)
+
+    st_data = ta.supertrend(df_1h['High'], df_1h['Low'], df_1h['Close'], 
+                           length=st_period, multiplier=st_mult)
+    df_1h['SuperTrend'] = st_data['SUPERT_' + str(st_period) + '_' + str(st_mult)]
+    df_1h['ST_Dir'] = st_data['SUPERTd_' + str(st_period) + '_' + str(st_mult)]
+
+    # === Compound Logic ===
+    last_row = df_1h.iloc[-1]
+    prev_row = df_1h.iloc[-2]
+
+    ema_bull = last_row['EMA20'] > last_row['EMA50']
+    super_bull = last_row['ST_Dir'] == 1
+
+    if ema_bull and super_bull and live_price > last_row['SuperTrend']:
+        signal = "🟢 STRONG BUY SIGNAL"
+        signal_color = "lime"
+        entry_note = "Demand Zone + SuperTrend Flip"
+    elif not ema_bull and not super_bull and live_price < last_row['SuperTrend']:
+        signal = "🔴 STRONG SELL SIGNAL"
+        signal_color = "red"
+        entry_note = "Supply Zone + SuperTrend Flip"
+    else:
+        signal = "⭕ WAIT / NO CLEAR SIGNAL"
+        signal_color = "orange"
+        entry_note = "Trend not confirmed"
+
+    # UI
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(f"{selected_coin} Price", f"${live_price:,.4f}")
+    with col2:
+        st.markdown(f"**Signal:** <span style='color:{signal_color}; font-size:26px; font-weight:bold;'>{signal}</span>", unsafe_allow_html=True)
+    with col3:
+        st.metric("Entry Suggestion", entry_note)
+
+    # Chart
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df_1h.index, open=df_1h['Open'], high=df_1h['High'],
+                                 low=df_1h['Low'], close=df_1h['Close']))
+    fig.add_trace(go.Scatter(x=df_1h.index, y=df_1h['SuperTrend'], line=dict(color='violet', width=3), name="SuperTrend"))
+    fig.add_trace(go.Scatter(x=df_1h.index, y=df_1h['EMA20'], line=dict(color='orange'), name="EMA 20"))
+    fig.add_trace(go.Scatter(x=df_1h.index, y=df_1h['EMA50'], line=dict(color='blue'), name="EMA 50"))
+
+    fig.update_layout(height=650, template="plotly_dark", title="Compound Strategy Chart")
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.info(f"**Logic:** SuperTrend + EMA20/50 dono agree karein tabhi strong signal. Yeh bot timing ke liye best hai.")
+
+except Exception as e:
+    st.error(f"Error: {e}")
